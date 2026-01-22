@@ -1,0 +1,19 @@
+# Gemfile
+
+source 'https://rubygems.org'
+
+gem 'dotenv' 
+
+gem 'convert_api'               # gem for conversion service
+
+gem 'sinatra'
+
+gem 'functions_framework'       # google cloud functions library
+
+gem 'roo'        # read XLSX
+
+gem 'caxlsx'     # write XLSX with formatting (maintained axlsx fork)
+
+gem "rackup", "~> 2.2"
+
+gem "puma", "~> 6.6"

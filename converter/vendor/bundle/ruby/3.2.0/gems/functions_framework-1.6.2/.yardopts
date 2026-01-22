@@ -1,0 +1,14 @@
+--no-private
+--title=Functions Framework
+--markup markdown
+--markup-provider redcarpet
+--main=docs/overview.md
+./lib/functions_framework/**/*.rb
+./lib/functions_framework.rb
+-
+docs/overview.md
+docs/writing-functions.md
+docs/testing-functions.md
+docs/running-a-functions-server.md
+docs/deploying-functions.md
+CHANGELOG.md

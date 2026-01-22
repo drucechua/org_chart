@@ -1,0 +1,472 @@
+[
+  {
+    "id": "0_AlNuaimi,_Rashed",
+    "name": "AlNuaimi, Rashed",
+    "title": "Chief Human Resources Officer (CHRO)",
+    "department": "Office of Human Resources  (AlNuaimi, Rashed)",
+    "children": [
+      {
+        "id": "5_Moussoux,_Florence",
+        "name": "Moussoux, Florence",
+        "title": "Head of HR Planning & Strategic Initiatives",
+        "department": "HR Planning  (Moussoux, Florence)",
+        "children": [
+          {
+            "id": "63_Alhajeri,_Fatema_Salem",
+            "name": "Alhajeri, Fatema Salem",
+            "title": "Business Support Specialist",
+            "department": NaN,
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "6_Alamoodi,_Saif",
+        "name": "Alamoodi, Saif",
+        "title": "Director, Government Relations and Immigration  Services",
+        "department": "Immigration & Relocation Services  (Alamoodi, Saif)",
+        "children": [
+          {
+            "id": "64_Alhosani,_Yaaqoub",
+            "name": "Alhosani, Yaaqoub",
+            "title": "Manager, Public Relations",
+            "department": "Government Systems & External Affairs  (Alhosani, Yaaqoub)",
+            "children": [
+              {
+                "id": "74_Alhameli,_Falah",
+                "name": "Alhameli, Falah",
+                "title": "Immigration Services Coordinator",
+                "department": NaN,
+                "children": []
+              },
+              {
+                "id": "75_Aljaberi,_Alyazia",
+                "name": "Aljaberi, Alyazia",
+                "title": "Immigration Services Coordinator",
+                "department": NaN,
+                "children": []
+              },
+              {
+                "id": "76_Almansoori,_Maitha",
+                "name": "Almansoori, Maitha",
+                "title": "Immigration Services Coordinator",
+                "department": NaN,
+                "children": []
+              },
+              {
+                "id": "77_Nasser,_Feras_Obaid_Al",
+                "name": "Nasser, Feras Obaid Al",
+                "title": "Senior PRO & Immigration Specialist",
+                "department": NaN,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "66_(2)_Managers",
+            "name": "(2) Managers",
+            "title": NaN,
+            "department": "Immigration Services  (Kabeer, Abdul, Mohamed, Nouf)",
+            "children": [
+              {
+                "id": "78_Alhajri,_Asma",
+                "name": "Alhajri, Asma",
+                "title": "Immigration Services Specialist",
+                "department": NaN,
+                "children": []
+              },
+              {
+                "id": "79_Alhosani,_Maryam",
+                "name": "Alhosani, Maryam",
+                "title": "Immigration Services Specialist",
+                "department": NaN,
+                "children": []
+              },
+              {
+                "id": "80_AlNahdi,_Zayed_QahtanSaleh",
+                "name": "AlNahdi, Zayed QahtanSaleh",
+                "title": "Immigration Services Operations Specialist",
+                "department": NaN,
+                "children": []
+              },
+              {
+                "id": "81_Alqubaisi,_Mera_Eid",
+                "name": "Alqubaisi, Mera Eid",
+                "title": "Immigration Services Coordinator",
+                "department": NaN,
+                "children": []
+              },
+              {
+                "id": "82_Mohamed,_Nouf",
+                "name": "Mohamed, Nouf",
+                "title": "Operations and Communication Specialist, Immigration Services",
+                "department": NaN,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "67_Gameel,_Saru",
+            "name": "Gameel, Saru",
+            "title": "Assistant Director, Relocation Services",
+            "department": "Relocation Services",
+            "children": [
+              {
+                "id": "83_Balasubramanian,_Ram_Mohan",
+                "name": "Balasubramanian, Ram Mohan",
+                "title": "Employee Mobility Services Specialist",
+                "department": NaN,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "7_Putnins,_Natasha",
+        "name": "Putnins, Natasha",
+        "title": "Director, Learning & Organizational Development",
+        "department": "Learning & Organizational Development  (Putnins, Natasha)",
+        "children": [
+          {
+            "id": "69_Beetham,_Anne",
+            "name": "Beetham, Anne",
+            "title": "Associate Director Performance & Talent Development",
+            "department": NaN,
+            "children": []
+          },
+          {
+            "id": "84_Chua,_Andreana_Druce",
+            "name": "Chua, Andreana Druce",
+            "title": "Research Fellow",
+            "department": NaN,
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "8_Koyo,_Karl_Delors",
+        "name": "Koyo, Karl Delors",
+        "title": "Executive Director, Strategic HR Transformation",
+        "department": "Strategic HR Transformation  (Koyo, Karl Delors)",
+        "children": [
+          {
+            "id": "71_Mreish,_Amani",
+            "name": "Mreish, Amani",
+            "title": "Director, Compensation, Benefits and HRIS",
+            "department": "Compensation, Benefits & HRIS  (Mreish, Amani)",
+            "children": [
+              {
+                "id": "85_Ramos,_Jasmin_Oconer",
+                "name": "Ramos, Jasmin Oconer",
+                "title": "Manager, Employee Benefits",
+                "department": "Benefits  (Ramos, Jasmin Oconer)",
+                "children": [
+                  {
+                    "id": "96_Jijakli,_Bana",
+                    "name": "Jijakli, Bana",
+                    "title": "HR Advisor and Benefits Coordinator",
+                    "department": NaN,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "86_Moghrabi,_Mona",
+                "name": "Moghrabi, Mona",
+                "title": "Assistant Director, HR Information System and Services",
+                "department": "HR Information System and Services  (Moghrabi, Mona)",
+                "children": [
+                  {
+                    "id": "97_Malaiba,_Wendy_Joy_Abuedo",
+                    "name": "Malaiba, Wendy Joy Abuedo",
+                    "title": "Human Resources Advisor",
+                    "department": NaN,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "87_Saadeddin,_Hanan_Tayel",
+                "name": "Saadeddin, Hanan Tayel",
+                "title": "Senior Compensation Analyst",
+                "department": "PeopleLink and HR Services  (Saadeddin, Hanan Tayel)",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "72_Arikat,_Suhair_Mohamed_Atta_Khalil",
+            "name": "Arikat, Suhair Mohamed Atta Khalil",
+            "title": "Director, HR Business Partner & Employee Relations",
+            "department": "HR Business Partners  (Arikat, Suhair Mohamed Atta Khalil)",
+            "children": [
+              {
+                "id": "88_Issa,_Fatima",
+                "name": "Issa, Fatima",
+                "title": "Assistant Director, HR Business Partner",
+                "department": "HR Business Partners  (Issa, Fatima)",
+                "children": [
+                  {
+                    "id": "98_Young,_Tessa",
+                    "name": "Young, Tessa",
+                    "title": "HR Specialist",
+                    "department": NaN,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "89_Nyamanhindi,_Alvina",
+                "name": "Nyamanhindi, Alvina",
+                "title": "HR Services Manager",
+                "department": "HR Peoplelink  (Nyamanhindi, Alvina)",
+                "children": [
+                  {
+                    "id": "99_Santos,_Erika",
+                    "name": "Santos, Erika",
+                    "title": "Human Resources Assistant",
+                    "department": NaN,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "90_Alblooshi,_Majed_Nabeel_(\u0645\u0627\u062c\u062f_\u0646\u0628\u064a\u0644_\u0627\u0644\u0628\u0644\u0648\u0634\u064a)",
+                "name": "Alblooshi, Majed Nabeel (\u0645\u0627\u062c\u062f \u0646\u0628\u064a\u0644 \u0627\u0644\u0628\u0644\u0648\u0634\u064a)",
+                "title": "Human Resources Business Partner",
+                "department": NaN,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "73_O'Brien,_Charlotte_(On_Leave)",
+            "name": "O'Brien, Charlotte (On Leave)",
+            "title": "Head of Talent Acquisition",
+            "department": "Talent Acquisition  (O'Brien, Charlotte (On Leave))",
+            "children": [
+              {
+                "id": "92_Aniciete,_Margie_Navarro",
+                "name": "Aniciete, Margie Navarro",
+                "title": "Talent Acquisition Specialist",
+                "department": NaN,
+                "children": []
+              },
+              {
+                "id": "93_Baker,_Stacey_Alana",
+                "name": "Baker, Stacey Alana",
+                "title": "Talent Acquisition Specialist",
+                "department": NaN,
+                "children": []
+              },
+              {
+                "id": "94_Da_Cruz,_Amanda",
+                "name": "Da Cruz, Amanda",
+                "title": "Talent Acquisition Coordinator",
+                "department": NaN,
+                "children": []
+              },
+              {
+                "id": "95_Fikree,_Shurooq",
+                "name": "Fikree, Shurooq",
+                "title": "Talent Acquisition Specialist",
+                "department": NaN,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "9_Alhash,_Reem_Mohammad_Ali_Saeed",
+        "name": "Alhash, Reem Mohammad Ali Saeed",
+        "title": "Director of National Talent Management",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "10_Corotan,_Mylene",
+        "name": "Corotan, Mylene",
+        "title": "Manager of Administration to the CHRO",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "21_Alameri,_Alreem",
+        "name": "Alameri, Alreem",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "22_Alazeezi,_Mahra",
+        "name": "Alazeezi, Mahra",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "23_Alhosani,_Fatima",
+        "name": "Alhosani, Fatima",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "24_AlHosani,_Shamma",
+        "name": "AlHosani, Shamma",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "25_Alkatheeri,_Ahad",
+        "name": "Alkatheeri, Ahad",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "26_Alkhoori,_Shaikha",
+        "name": "Alkhoori, Shaikha",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "27_Almenhali,_Sara",
+        "name": "Almenhali, Sara",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "28_Almheiri,_Rafeea",
+        "name": "Almheiri, Rafeea",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "29_Almujaini,_Ibrahim",
+        "name": "Almujaini, Ibrahim",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "30_Al_Nuaimi,_Shaikha_Mohammed",
+        "name": "Al Nuaimi, Shaikha Mohammed",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "31_Alobaidalla,_Shaikha",
+        "name": "Alobaidalla, Shaikha",
+        "title": "Lab Assistant",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "32_Alrayssi,_Rayan",
+        "name": "Alrayssi, Rayan",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "33_Alremeithi,_Mahra",
+        "name": "Alremeithi, Mahra",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "34_Alwahedi,_Eman",
+        "name": "Alwahedi, Eman",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "35_Alzaabi,_Noof",
+        "name": "Alzaabi, Noof",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "36_Majid,_Fatima_Ismael",
+        "name": "Majid, Fatima Ismael",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "37_Shamlan,_Nadia",
+        "name": "Shamlan, Nadia",
+        "title": "Academic Operations Trainee",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "52_Dilmamode,_Anisah",
+        "name": "Dilmamode, Anisah",
+        "title": "Senior Manager, Employee Relations",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "53_AlKaabi,_Mahra",
+        "name": "AlKaabi, Mahra",
+        "title": "Student Assistant, Higher Education Career Program",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "54_Almansoori,_Azzah",
+        "name": "Almansoori, Azzah",
+        "title": "Student Assistant, Higher Education Career Program",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "55_Almazrouei,_Amal",
+        "name": "Almazrouei, Amal",
+        "title": "Student Assistant, Higher Education Career Program",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "56_Almheiri,_Fatima",
+        "name": "Almheiri, Fatima",
+        "title": "Student Assistant, Higher Education Career Program",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "57_Alremeithi,_Meera",
+        "name": "Alremeithi, Meera",
+        "title": "Student Assistant, Higher Education Career Program",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "58_Alshamsi,_Maitha",
+        "name": "Alshamsi, Maitha",
+        "title": "Student Assistant, Higher Education Career Program",
+        "department": NaN,
+        "children": []
+      },
+      {
+        "id": "59_Alzahmi,_Alyaa",
+        "name": "Alzahmi, Alyaa",
+        "title": "Student Assistant, Higher Education Career Program",
+        "department": NaN,
+        "children": []
+      }
+    ]
+  }
+]

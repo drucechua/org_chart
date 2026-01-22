@@ -1,0 +1,70 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    base64 (0.3.0)
+    caxlsx (4.4.0)
+      htmlentities (~> 4.3, >= 4.3.4)
+      marcel (~> 1.0)
+      nokogiri (~> 1.10, >= 1.10.4)
+      rubyzip (>= 2.4, < 4)
+    cloud_events (0.7.1)
+    convert_api (3.0.0)
+    csv (3.3.5)
+    dotenv (3.1.8)
+    functions_framework (1.6.2)
+      cloud_events (>= 0.7.0, < 2.a)
+      puma (>= 4.3.0, < 7.a)
+      rack (>= 2.1, < 4.a)
+    htmlentities (4.3.4)
+    logger (1.7.0)
+    marcel (1.1.0)
+    mustermann (3.0.4)
+      ruby2_keywords (~> 0.0.1)
+    nio4r (2.7.4)
+    nokogiri (1.18.10-x86_64-darwin)
+      racc (~> 1.4)
+    puma (6.6.1)
+      nio4r (~> 2.0)
+    racc (1.8.1)
+    rack (3.2.3)
+    rack-protection (4.2.1)
+      base64 (>= 0.1.0)
+      logger (>= 1.6.0)
+      rack (>= 3.0.0, < 4)
+    rack-session (2.1.1)
+      base64 (>= 0.1.0)
+      rack (>= 3.0.0)
+    rackup (2.2.1)
+      rack (>= 3)
+    roo (3.0.0)
+      base64 (~> 0.2)
+      csv (~> 3)
+      logger (~> 1)
+      nokogiri (~> 1)
+      rubyzip (>= 3.0.0, < 4.0.0)
+    ruby2_keywords (0.0.5)
+    rubyzip (3.2.0)
+    sinatra (4.2.1)
+      logger (>= 1.6.0)
+      mustermann (~> 3.0)
+      rack (>= 3.0.0, < 4)
+      rack-protection (= 4.2.1)
+      rack-session (>= 2.0.0, < 3)
+      tilt (~> 2.0)
+    tilt (2.6.1)
+
+PLATFORMS
+  x86_64-darwin-24
+
+DEPENDENCIES
+  caxlsx
+  convert_api
+  dotenv
+  functions_framework
+  puma (~> 6.6)
+  rackup (~> 2.2)
+  roo
+  sinatra
+
+BUNDLED WITH
+   2.7.2
