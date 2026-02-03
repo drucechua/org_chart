@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Org Chart Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Outfit font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --purple: #57068c;
+      --purple-soft: #f5effb;
+      --yellow: #ef8b21;
+      --bg: #f5f5f7;
+      --text-primary: #0f172a;
+      --text-secondary: #4b5563;
+      --border: #d1d5db;
+      --white: #ffffff;
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Outfit', system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(87, 6, 140, 0.08) 0, transparent 45%),
+        radial-gradient(circle at 90% 100%, rgba(239, 139, 33, 0.08) 0, transparent 50%),
+        var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--text-primary);
+    }
+
+    .card {
+      width: 100%;
+      max-width: 960px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(18px);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 28px 32px;
+    }
+
+    @media (max-width: 720px) {
+      .card {
+        padding: 22px 18px;
+      }
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .header span {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--purple-soft);
+      border: 1px solid rgba(87, 6, 140, 0.18);
+      font-size: 11px;
+      color: var(--purple);
+      white-space: nowrap;
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--yellow);
+    }
+
+    /* Layout */
+    .content {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+    }
+
+    @media (max-width: 720px) {
+      .content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
+
+    /* Left */
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .description {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      max-width: 520px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 720px) {
+      .steps {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .step {
+      display: flex;
+      gap: 8px;
+    }
+
+    .step-badge {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--purple-soft);
+      border: 1px solid rgba(87, 6, 140, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--purple);
+      flex-shrink: 0;
+    }
+
+    /* Right / form */
+    .form-card {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .form-header span {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .form-header small {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    #dropzone {
+      border: 1.8px dashed #cbd5e1;
+      border-radius: 14px;
+      background: var(--white);
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    #dropzone.dragover {
+      border-color: var(--purple);
+      background: var(--purple-soft);
+      box-shadow: 0 0 0 1px rgba(87, 6, 140, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .drop-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #4338ca;
+    }
+
+    .drop-text span {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .drop-text small {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .file-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    button {
+      margin-top: 6px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, var(--purple), #7b1db4);
+      color: var(--white);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 12px 26px rgba(87, 6, 140, 0.35);
+      transition: all 0.15s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 32px rgba(87, 6, 140, 0.45);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .note {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span>Org Chart</span>
+      <div class="pill">
+        <span class="pill-dot"></span>
+        <!-- Visualized in seconds -->
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Left -->
+      <section>
+        <h1>Org Chart Generator</h1>
+        <p class="description">
+          Upload your Workday Excel Employee file and generate the org chart.
+        </p>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-badge">1</div>
+            <span>Prepare the Excel file with an <strong>Org Chart</strong> sheet.</span>
+          </div>
+          <div class="step">
+            <div class="step-badge">2</div>
+            <span>Drag and drop the file into the uploader.</span>
+          </div>
+          <div class="step">
+            <div class="step-badge">3</div>
+            <span>Explore the org structure in your browser.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right -->
+      <section class="form-card">
+        <div class="form-header">
+          <span>Upload Excel file</span>
+          <small>.xlsx required</small>
+        </div>
+
+        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+          <label id="dropzone">
+            <div class="drop-icon">↑</div>
+            <div class="drop-text">
+              <span>Drop file here</span>
+              <small>or click to browse</small>
+            </div>
+            <input id="fileInput" type="file" name="file" accept=".xlsx" />
+          </label>
+
+          <div class="file-label" id="fileLabel">No file selected</div>
+
+          <button id="submitBtn" type="submit" disabled>
+            Generate Org Chart
+          </button>
+
+          <p class="note">
+            Files are used only to render this visualization. No data is stored.
+          </p>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const fileLabel = document.getElementById('fileLabel');
+
+    function updateState() {
+      submitBtn.disabled = !fileInput.files.length;
+      fileLabel.textContent = fileInput.files.length
+        ? `Selected: ${fileInput.files[0].name}`
+        : 'No file selected';
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        updateState();
+      }
+    });
+    fileInput.addEventListener('change', updateState);
+  </script>
+  <script>
+    window.addEventListener('load', () => {
+        window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth'
+        });
+    });
+  </script>
+
+</body>
+</html>

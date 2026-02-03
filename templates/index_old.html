@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>HR Org Chart Generator · NYU</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --nyu-purple: #57068c;
+      --nyu-purple-soft: #f5f0ff;
+      --slate-950: #020617;
+      --slate-900: #0f172a;
+      --slate-700: #4b5563;
+      --slate-500: #6b7280;
+      --slate-200: #e5e7eb;
+      --slate-100: #f3f4f6;
+      --white: #ffffff;
+      --radius-lg: 18px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top, #f9fafb 0, #e5e7eb 55%, #d1d5db 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--slate-900);
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 960px;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      border-radius: 24px;
+      box-shadow: var(--shadow-soft);
+      padding: 28px 32px;
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        padding: 20px 18px;
+        border-radius: 20px;
+      }
+    }
+
+    .shell-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+      padding-bottom: 16px;
+      margin-bottom: 18px;
+    }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-square {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: var(--nyu-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 0.06em;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-text span:first-child {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--slate-900);
+    }
+
+    .brand-text span:last-child {
+      font-size: 12px;
+      color: var(--slate-500);
+    }
+
+    .tagline {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--nyu-purple-soft);
+      color: var(--nyu-purple);
+      border: 1px solid rgba(87, 6, 140, 0.15);
+      white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      .shell-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .tagline {
+        align-self: flex-start;
+      }
+    }
+
+    .shell-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 720px) {
+      .shell-body {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .intro {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .intro h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0.01em;
+    }
+
+    .intro p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--slate-700);
+      line-height: 1.5;
+    }
+
+    .steps {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      font-size: 11px;
+      color: var(--slate-700);
+    }
+
+    @media (max-width: 720px) {
+      .steps {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-badge {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: #e5def7;
+      color: var(--nyu-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .step span {
+      flex: 1;
+    }
+
+    .form-card {
+      background: #f9fafb;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      padding: 18px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .form-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-title small {
+      font-size: 11px;
+      color: var(--slate-500);
+      font-weight: 400;
+    }
+
+    #dropzone {
+      margin-top: 2px;
+      border-radius: 14px;
+      border: 1.8px dashed #cbd5e1;
+      background: #ffffff;
+      padding: 18px 14px;
+      cursor: pointer;
+      transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.12s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #dropzone.dragover {
+      border-color: var(--nyu-purple);
+      background: #f5f0ff;
+      box-shadow: 0 0 0 1px rgba(87, 6, 140, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .drop-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #1d4ed8;
+    }
+
+    .drop-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .drop-text span {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--slate-900);
+    }
+
+    .drop-text small {
+      font-size: 11px;
+      color: var(--slate-500);
+    }
+
+    .file-label {
+      font-size: 11px;
+      color: var(--slate-500);
+      margin-top: 2px;
+    }
+
+    .file-label strong {
+      color: var(--slate-700);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    button {
+      margin-top: 6px;
+      padding: 9px 16px;
+      border-radius: 999px;
+      background: var(--nyu-purple);
+      color: var(--white);
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 8px 18px rgba(87, 6, 140, 0.22);
+      transition:
+        background 0.16s ease,
+        transform 0.12s ease,
+        box-shadow 0.16s ease,
+        opacity 0.12s ease;
+    }
+
+    button span.loader {
+      display: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      border-top-color: #ffffff;
+      animation: spin 0.8s linear infinite;
+    }
+
+    button:hover:not(:disabled) {
+      background: #46046f;
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(87, 6, 140, 0.32);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .helper-text {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--slate-500);
+      text-align: left;
+    }
+
+    .helper-text strong {
+      color: var(--slate-700);
+    }
+
+    .status-text {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--slate-500);
+      min-height: 14px;
+    }
+
+    .status-text.error {
+      color: #b91c1c;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="shell-header">
+      <div class="brand-mark">
+        <div class="brand-square">NYU</div>
+        <div class="brand-text">
+          <span>NYU Abu Dhabi</span>
+          <span>Office of Human Resources</span>
+        </div>
+      </div>
+      <div class="tagline">
+        Org Structure · Visualized in seconds
+      </div>
+    </header>
+
+    <main class="shell-body">
+      <!-- Left: copy & steps -->
+      <section class="intro">
+        <h1>HR Org Chart Generator</h1>
+        <p>
+          Upload the latest HR org file and instantly generate an interactive,
+          zoomable org chart for leadership reviews, planning sessions, and
+          onboarding.
+        </p>
+
+        <div class="steps" aria-label="How it works">
+          <div class="step">
+            <div class="step-badge">1</div>
+            <span>Export the HR roster with the <strong>Org Chart</strong> sheet.</span>
+          </div>
+          <div class="step">
+            <div class="step-badge">2</div>
+            <span>Drag &amp; drop the Excel file into the uploader.</span>
+          </div>
+          <div class="step">
+            <div class="step-badge">3</div>
+            <span>Review, zoom, and navigate the org chart in your browser.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: upload form -->
+      <section class="form-card" aria-label="Org chart generator form">
+        <div class="form-title">
+          <span>Upload Excel file</span>
+          <small>.xlsx · “Org Chart” sheet required</small>
+        </div>
+
+        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+          <label id="dropzone">
+            <div class="drop-icon" aria-hidden="true">⬆︎</div>
+            <div class="drop-text">
+              <span>Drop your Excel file here</span>
+              <small>or click to choose a file from your device</small>
+            </div>
+            <input
+              id="fileInput"
+              type="file"
+              name="file"
+              accept=".xlsx"
+              aria-label="Choose Excel file"
+            />
+          </label>
+
+          <div class="file-label" id="fileLabel">
+            No file selected yet.
+          </div>
+
+          <button id="submitBtn" type="submit" disabled>
+            <span class="btn-text">Generate Org Chart</span>
+            <span class="loader" aria-hidden="true"></span>
+          </button>
+
+          <p class="helper-text">
+            The file is processed securely and used only to render this
+            visualization. <strong>No data is stored or shared.</strong>
+          </p>
+
+          <p class="status-text" id="statusText"></p>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const form = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const fileLabel = document.getElementById('fileLabel');
+    const statusText = document.getElementById('statusText');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoader = submitBtn.querySelector('.loader');
+
+    function setStatus(message, isError = false) {
+      statusText.textContent = message || '';
+      statusText.classList.toggle('error', !!isError);
+    }
+
+    function updateButtonState() {
+      submitBtn.disabled = !fileInput.files.length;
+      if (!fileInput.files.length) {
+        fileLabel.textContent = 'No file selected yet.';
+      } else {
+        const name = fileInput.files[0].name;
+        fileLabel.innerHTML = 'Selected file: <strong>' + name + '</strong>';
+      }
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    ['dragleave', 'dragend'].forEach((ev) => {
+      dropzone.addEventListener(ev, () => dropzone.classList.remove('dragover'));
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        updateButtonState();
+        setStatus('');
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      updateButtonState();
+      setStatus('');
+    });
+
+    form.addEventListener('submit', (e) => {
+      if (!fileInput.files.length) {
+        e.preventDefault();
+        setStatus('Please select an Excel file before generating the org chart.', true);
+        return;
+      }
+      setStatus('Processing file and generating org chart…');
+      submitBtn.disabled = true;
+      btnText.textContent = 'Generating…';
+      btnLoader.style.display = 'inline-block';
+    });
+  </script>
+</body>
+</html>
