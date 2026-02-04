@@ -355,7 +355,12 @@
       e.preventDefault();
       dropzone.classList.remove('dragover');
       if (e.dataTransfer.files.length) {
-        fileInput.files = e.dataTransfer.files;
+        // input.files is read-only; use DataTransfer to assign dropped files
+        const dt = new DataTransfer();
+        for (let i = 0; i < e.dataTransfer.files.length; i++) {
+          dt.items.add(e.dataTransfer.files[i]);
+        }
+        fileInput.files = dt.files;
         updateState();
       }
     });

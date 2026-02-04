@@ -1,6 +1,5 @@
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request
 import pandas as pd
-import json
 from collections import defaultdict, deque
 
 # -------------------------------------------
@@ -109,7 +108,7 @@ def is_leader_value(v):
     return False
 
 
-def build_org_chart_html(df):
+def build_org_chart_data(df):
     df = df.copy()
 
     df[COL_ID] = df[COL_ID].astype(str)
@@ -331,132 +330,7 @@ def build_org_chart_html(df):
 
     apply_collapse_flags(root_node, is_root=True, expanded_group_id=default_expanded_group_id)
 
-    # Serialize and inject into HTML
-    hierarchy_json = json.dumps(root_node, indent=2)
-
-    # HTML template with OrgChart integration. Kept simple and self-contained.
-    html_template = """<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Org Chart</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/orgchart@3.8.0/dist/css/jquery.orgchart.min.css">
-  <style>
-    html, body { margin:0; padding:0; height:100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background:#f5f5f7; }
-    #chart-container { width:100%; height:100vh; overflow:auto; background:linear-gradient(180deg,#f5f5f7 0%,#ffffff 40%); position:relative; }
-    .hint-bar { position:absolute; top:10px; left:16px; background:rgba(17,24,39,0.78); color:#e5e7eb; padding:6px 12px; border-radius:999px; font-size:12px; z-index:10; }
-    .orgchart { background:transparent !important; }
-    .orgchart .nodes { align-items:flex-start; }
-    .orgchart .node { border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.08); border:1px solid #d0d7de; background:#ffffff; padding:8px; box-sizing:border-box; }
-    .orgchart .node:not(.group-node) { width:190px; min-height:72px; max-height:72px; display:flex; flex-direction:column; justify-content:center; text-align:center; }
-    .org-node-name, .org-node-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .org-node-name { font-weight:600; font-size:13px; margin-bottom:4px; color:#111827; }
-    .org-node-title { font-size:11px; color:#4b5563; }
-    .orgchart .node.team-leader { border-color:#2563eb; background:#eff6ff; }
-    .orgchart .node.focused { border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,0.18); }
-    .orgchart .node.group-node { background:#111827; border-color:#111827; color:#f9fafb; box-shadow:0 4px 10px rgba(15,23,42,0.35); padding:10px 14px; }
-    .group-node .org-node-name { font-size:14px; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:6px; color:#f9fafb; }
-    .group-node .org-node-title { font-size:11px; color:#e5e7eb; }
-    .orgchart .node.role-chro { background:#020617; border-color:#020617; color:#f9fafb; }
-    .orgchart .node.role-trainee:not(.group-node) { background:#f5f3ff; border-color:#a855f7; }
-    .orgchart .level { padding-top:14px; padding-bottom:14px; }
-    .orgchart .lines .topLine, .orgchart .lines .leftLine, .orgchart .lines .rightLine, .orgchart .lines .downLine { border-color:#e6e9ee; }
-
-    /* Make the global root more prominent and readable */
-    .orgchart .node.role-chro {
-        background:#020617;
-        border-color:#020617;
-        color:#f9fafb;
-        padding: 14px 18px;
-        min-width: 260px;
-        max-width: 420px;
-    }
-    .orgchart .node.role-chro .org-node-name {
-        font-size: 14px;
-        font-weight: 700;
-        color: #f9fafb;
-    }
-    .orgchart .node.role-chro .org-node-title {
-        font-size: 12px;
-        color: #e5e7eb;
-    }
-  </style>
-</head>
-<body>
-  <div class="hint-bar">Tip: Click a group or leader to expand their team.</div>
-  <div id="chart-container"></div>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/orgchart@3.8.0/dist/js/jquery.orgchart.min.js"></script>
-  <script>
-    var orgData = __ORG_DATA__;
-    $(function() {
-      var $container = $('#chart-container');
-      function getChart() { return $container.find('.orgchart'); }
-      function centerChart() {
-        var $chart = getChart(); if (!$chart.length) return;
-        var chartWidth = $chart.outerWidth(); var containerWidth = $container.width();
-        if (chartWidth > containerWidth) { $container.scrollLeft((chartWidth - containerWidth)/2); } else { $container.scrollLeft(0); }
-      }
-      function centerOnNode($node) {
-        var $chart = getChart(); if (!$chart.length || !$node.length) return;
-        var chartOffset = $chart.offset(); var nodeOffset = $node.offset();
-        var nodeCenterX = nodeOffset.left - chartOffset.left + $node.outerWidth()/2;
-        var targetScrollLeft = nodeCenterX - $container.width()/2; if (targetScrollLeft < 0) targetScrollLeft = 0;
-        $container.scrollLeft(targetScrollLeft);
-      }
-      var oc = $container.orgchart({
-        data: orgData,
-        nodeTitle: 'name',
-        nodeContent: 'shortTitle',
-        pan: true,
-        zoom: true,
-        draggable: false,
-        direction: 't2b',
-        visibleLevel: 3,
-        verticalLevel: 4,
-        nodeTemplate: function(data) {
-          if (data.isGroup) {
-            var subtitle = data.title ? '<div class="org-node-title">' + data.title + '</div>' : '';
-            return '<div class="org-node-name">' + (data.name || '') + '</div>' + subtitle;
-          }
-          var displayTitle = data.shortTitle || data.title || '';
-          var titleLine = displayTitle ? '<div class="org-node-title">' + displayTitle + '</div>' : '';
-          return '<div class="org-node-name">' + (data.name || '') + '</div>' + titleLine;
-        },
-        createNode: function($node, data) {
-          if (data.className) { $node.addClass(data.className); }
-          if (data.isGroup) { $node.addClass('group-node'); } else if (data.isLeader) { $node.addClass('team-leader'); }
-          var tooltipParts = []; if (data.name) tooltipParts.push(data.name); if (data.title) tooltipParts.push(data.title); if (data.org) tooltipParts.push(data.org);
-          if (tooltipParts.length > 0) { $node.attr('title', tooltipParts.join(' — ')); }
-          $node.on('click', function() {
-            $('.orgchart .node').removeClass('focused');
-            $(this).addClass('focused');
-            centerOnNode($(this));
-          });
-        }
-      });
-      // center globally, then focus the root for readability
-      centerChart();
-      setTimeout(function() {
-        var $root = $container.find('.orgchart .node.role-chro').first();
-        if (!$root.length) $root = $container.find('.orgchart .node').first();
-        if ($root.length) {
-          centerOnNode($root);
-          $('.orgchart .node').removeClass('focused');
-          $root.addClass('focused');
-        }
-      }, 220);
-      $(window).on('resize', centerChart);
-    });
-  </script>
-</body>
-</html>
-"""
-
-    html_with_data = html_template.replace("__ORG_DATA__", hierarchy_json)
-    return html_with_data
+    return root_node
 
 
 # ===========================================
@@ -471,8 +345,8 @@ def index():
 
         try:
             df_clean = load_and_clean_org_data_from_file(file)
-            html = build_org_chart_html(df_clean)
-            return Response(html, mimetype="text/html")
+            org_data = build_org_chart_data(df_clean)
+            return render_template("org_chart.html", org_data=org_data)
         except Exception as e:
             # return a helpful error for users; in prod you'd log it as well
             return f"Error processing file: {e}", 500
