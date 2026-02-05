@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+import math
 import pandas as pd
 from collections import defaultdict, deque
 
@@ -108,6 +109,44 @@ def is_leader_value(v):
     return False
 
 
+def _json_safe_value(v):
+    """Convert a value to something JSON-serializable (no NaN/pd.NA)."""
+    if v is None:
+        return None
+    if isinstance(v, float) and math.isnan(v):
+        return None
+    try:
+        if pd.isna(v):
+            return None
+    except (TypeError, ValueError):
+        pass
+    if isinstance(v, str):
+        return v.strip()
+    if isinstance(v, (dict, list)):
+        return v
+    return v
+
+
+def _sanitize_org_node(node):
+    """Recursively sanitize org chart node so it is JSON-serializable."""
+    if not isinstance(node, dict):
+        return node
+    out = {}
+    string_keys = ("id", "name", "title", "shortTitle", "org", "className")
+    bool_keys = ("isLeader", "isGroup", "collapsed", "compact", "hybrid")
+    for k, val in node.items():
+        if k == "children":
+            out[k] = [_sanitize_org_node(c) for c in (val or [])]
+        else:
+            out[k] = _json_safe_value(val)
+            if out[k] is None:
+                if k in string_keys:
+                    out[k] = ""
+                elif k in bool_keys:
+                    out[k] = False
+    return out
+
+
 def build_org_chart_data(df):
     df = df.copy()
 
@@ -139,8 +178,6 @@ def build_org_chart_data(df):
         if isinstance(short_title, str) and "," in short_title:
             short_title = short_title.split(",")[0]
         short_title = short_title.strip()
-        if len(short_title) > 40:
-            short_title = short_title[:37].rstrip() + "…"
 
         title_lower = full_title.lower() if isinstance(full_title, str) else ""
         class_tokens = []
@@ -212,8 +249,8 @@ def build_org_chart_data(df):
 
         group_leaders = {
             "id": "GROUP_LEADERS",
-            "name": "LEADERSHIP & HEADS",
-            "title": "Directors, Heads, Managers, Chiefs",
+            "name": "LEADERSHIP",
+            "title": "",
             "shortTitle": "LEADERSHIP & HEADS",
             "org": "",
             "children": [],
@@ -224,7 +261,7 @@ def build_org_chart_data(df):
         group_staff = {
             "id": "GROUP_STAFF",
             "name": "PROFESSIONAL STAFF",
-            "title": "Coordinators, Specialists, Officers",
+            "title": "",
             "shortTitle": "PROFESSIONAL STAFF",
             "org": "",
             "children": [],
@@ -235,7 +272,7 @@ def build_org_chart_data(df):
         group_trainees = {
             "id": "GROUP_TRAINEES",
             "name": "TRAINEES & EARLY CAREER",
-            "title": "Academic Operations Trainees & similar roles",
+            "title": "",
             "shortTitle": "TRAINEES & EARLY CAREER",
             "org": "",
             "children": [],
@@ -346,6 +383,7 @@ def index():
         try:
             df_clean = load_and_clean_org_data_from_file(file)
             org_data = build_org_chart_data(df_clean)
+            org_data = _sanitize_org_node(org_data)
             return render_template("org_chart.html", org_data=org_data)
         except Exception as e:
             # return a helpful error for users; in prod you'd log it as well
@@ -356,4 +394,6 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5050))
+    app.run(debug=True, host="0.0.0.0", port=port)

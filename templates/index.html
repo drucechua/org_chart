@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Org Chart Generator</title>
+  <title>Organization Chart Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Outfit font -->
@@ -204,16 +204,17 @@
     }
 
     .drop-icon {
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 44px;
       border-radius: 999px;
-      background: #eef2ff;
-      border: 1px solid #c7d2fe;
+      background: var(--purple-soft);
+      border: 2px solid var(--purple);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      color: #4338ca;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--purple);
     }
 
     .drop-text span {
@@ -280,7 +281,7 @@
     <div class="content">
       <!-- Left -->
       <section>
-        <h1>Org Chart Generator</h1>
+        <h1>Organization Chart Generator</h1>
         <p class="description">
           Upload your Workday Excel Employee file and generate the org chart.
         </p>
@@ -288,7 +289,7 @@
         <div class="steps">
           <div class="step">
             <div class="step-badge">1</div>
-            <span>Prepare the Excel file with an <strong>Org Chart</strong> sheet.</span>
+            <span>Prepare your org chart spreadsheet from Workday.</span>
           </div>
           <div class="step">
             <div class="step-badge">2</div>
@@ -296,7 +297,7 @@
           </div>
           <div class="step">
             <div class="step-badge">3</div>
-            <span>Explore the org structure in your browser.</span>
+            <span>Explore the structure in your browser.</span>
           </div>
         </div>
       </section>
@@ -346,25 +347,62 @@
     }
 
     dropzone.addEventListener('click', () => fileInput.click());
-    dropzone.addEventListener('dragover', e => {
+    dropzone.addEventListener('dragover', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       dropzone.classList.add('dragover');
     });
-    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-    dropzone.addEventListener('drop', e => {
+    dropzone.addEventListener('dragleave', (e) => {
       e.preventDefault();
-      dropzone.classList.remove('dragover');
-      if (e.dataTransfer.files.length) {
-        // input.files is read-only; use DataTransfer to assign dropped files
-        const dt = new DataTransfer();
-        for (let i = 0; i < e.dataTransfer.files.length; i++) {
-          dt.items.add(e.dataTransfer.files[i]);
-        }
-        fileInput.files = dt.files;
-        updateState();
+      if (!dropzone.contains(e.relatedTarget)) {
+        dropzone.classList.remove('dragover');
       }
     });
-    fileInput.addEventListener('change', updateState);
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        const file = files[0];
+        if (!file.name.toLowerCase().endsWith('.xlsx')) {
+          fileLabel.textContent = 'Please drop an .xlsx file';
+          return;
+        }
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+        requestAnimationFrame(function () {
+          updateState();
+        });
+      }
+    });
+    fileInput.addEventListener('change', () => {
+      const input = fileInput;
+      function apply() {
+        if (!input.files || !input.files.length) {
+          fileLabel.textContent = 'No file selected';
+          submitBtn.disabled = true;
+          return;
+        }
+        const file = input.files[0];
+        if (!file.name.toLowerCase().endsWith('.xlsx')) {
+          fileLabel.textContent = 'Please select an .xlsx file';
+          submitBtn.disabled = true;
+          return;
+        }
+        fileLabel.textContent = 'Selected: ' + file.name;
+        submitBtn.disabled = false;
+      }
+      setTimeout(apply, 0);
+    });
+    document.getElementById('uploadForm').addEventListener('submit', (e) => {
+      if (!fileInput.files || !fileInput.files.length) {
+        e.preventDefault();
+        fileLabel.textContent = 'Please select a file first';
+        return;
+      }
+    });
   </script>
   <script>
     window.addEventListener('load', () => {

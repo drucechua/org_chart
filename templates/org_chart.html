@@ -4,40 +4,224 @@
   <meta charset="utf-8" />
   <title>Org Chart</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/orgchart@3.8.0/dist/css/jquery.orgchart.min.css">
   <style>
+    /* Design tokens */
+    :root {
+      --org-primary: #57068c;
+      --org-primary-dark: #3d0463;
+      --org-primary-light: #f5effb;
+      --org-accent: #ef8b21;
+      --org-surface: #f8f9fb;
+      --org-surface-alt: #ffffff;
+      --org-border: #e2e8f0;
+      --org-text: #0f172a;
+      --org-text-muted: #475569;
+      --org-line: #7c3aed;
+      --org-group-slate: #1e293b;
+      --org-group-trainees: #4c1d95;
+      --org-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      --org-radius: 12px;
+      --org-radius-sm: 8px;
+    }
+
     /* Base layout */
-    html,
-    body {
+    html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      background: #f5f5f7;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--org-surface);
+      color: var(--org-text);
     }
 
     #chart-container {
       width: 100%;
       height: 100vh;
       overflow: auto;
-      background: linear-gradient(180deg, #f5f5f7 0%, #ffffff 40%);
+      background: linear-gradient(180deg, var(--org-surface) 0%, var(--org-surface-alt) 35%);
       position: relative;
     }
 
     .hint-bar {
       position: absolute;
-      top: 10px;
-      left: 16px;
-      background: rgba(17, 24, 39, 0.78);
-      color: #e5e7eb;
-      padding: 6px 12px;
+      top: 14px;
+      left: 18px;
+      background: var(--org-group-slate);
+      color: #f1f5f9;
+      padding: 8px 14px;
       border-radius: 999px;
       font-size: 12px;
+      font-weight: 500;
       z-index: 10;
+      box-shadow: var(--org-shadow);
+      max-width: calc(50% - 120px);
     }
 
-    /* Chart structure */
+    .right-toolbar {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      z-index: 11;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 200px;
+      padding: 12px;
+      background: var(--org-surface-alt);
+      border: 1px solid var(--org-border);
+      border-radius: var(--org-radius);
+      box-shadow: var(--org-shadow);
+    }
+    .chart-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .chart-controls .org-btn {
+      padding: 10px 16px;
+      border-radius: var(--org-radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      border: 2px solid var(--org-primary);
+      background: var(--org-primary-light);
+      color: var(--org-primary);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(87, 6, 140, 0.12);
+      transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .chart-controls .org-btn:hover {
+      background: var(--org-primary);
+      color: #fff;
+      border-color: var(--org-primary-dark);
+      box-shadow: 0 4px 12px rgba(87, 6, 140, 0.25);
+    }
+
+    /* Zoom slider – bottom center */
+    .zoom-slider-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 12;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: var(--org-surface-alt);
+      border: 1px solid var(--org-border);
+      border-radius: var(--org-radius);
+      box-shadow: var(--org-shadow);
+    }
+    .zoom-slider-icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--org-text-muted);
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+    }
+    .zoom-slider-icon:hover {
+      color: var(--org-primary);
+      background: var(--org-primary-light);
+    }
+    .zoom-slider-track-wrap {
+      width: 180px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+    }
+    .zoom-slider-input {
+      width: 100%;
+      height: 8px;
+      margin: 0;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #1e293b;
+      border-radius: 4px;
+      outline: none;
+    }
+    .zoom-slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fef08a;
+      border: 2px solid #1e293b;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .zoom-slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.08);
+    }
+    .zoom-slider-input::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fef08a;
+      border: 2px solid #1e293b;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      cursor: pointer;
+    }
+    .zoom-slider-input::-moz-range-track {
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    .zoom-slider-value {
+      min-width: 3.5em;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--org-text);
+      text-align: center;
+    }
+    .zoom-bar-divider {
+      width: 1px;
+      align-self: stretch;
+      background: var(--org-border);
+      margin: 0 4px;
+    }
+    .zoom-slider-bar .zoom-bar-download {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 2px solid var(--org-primary);
+      background: var(--org-primary-light);
+      color: var(--org-primary);
+      border-radius: var(--org-radius-sm);
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .zoom-slider-bar .zoom-bar-download:hover {
+      background: var(--org-primary);
+      color: #fff;
+    }
+
+    .chart-zoom-wrapper {
+      display: inline-block;
+      transition: width 0.25s ease, height 0.25s ease;
+    }
+    .chart-zoom-wrapper .orgchart {
+      transition: transform 0.25s ease;
+    }
+
+    /* Chart structure & connector lines – professional neutral */
     .orgchart {
       background: transparent !important;
     }
@@ -46,139 +230,524 @@
       align-items: flex-start;
     }
 
+    /* Professional Staff: vertical span (stack children below header) */
+    .orgchart .node.group-node-staff + .nodes,
+    .orgchart .node.group-node-staff .nodes {
+      display: block !important;
+      flex-direction: column !important;
+      padding-left: 10px;
+    }
+
+    .orgchart .node.group-node-staff + .nodes .hierarchy,
+    .orgchart .node.group-node-staff .nodes .hierarchy {
+      display: block !important;
+      text-align: left;
+    }
+
+    .orgchart .node.group-node-staff + .nodes .node,
+    .orgchart .node.group-node-staff .nodes .node {
+      margin-bottom: 8px;
+    }
+
     .orgchart .level {
-      padding-top: 14px;
-      padding-bottom: 14px;
+      padding-top: 20px;
+      padding-bottom: 20px;
     }
 
     .orgchart .lines .topLine,
     .orgchart .lines .leftLine,
     .orgchart .lines .rightLine,
     .orgchart .lines .downLine {
-      border-color: #e6e9ee;
+      border-color: var(--org-line);
+      border-width: 1px;
     }
 
-    /* Node base */
+    /* Override plugin’s red connector lines (pseudo-elements use rgba(217,83,79,.8)) */
+    .orgchart .hierarchy::before {
+      border-color: var(--org-line) !important;
+    }
+    .orgchart .node:not(:only-child)::after,
+    .orgchart > ul > li > ul li > .node::before {
+      background-color: var(--org-line) !important;
+    }
+    .orgchart .nodes.vertical .hierarchy::before,
+    .orgchart .nodes.vertical .hierarchy::after {
+      border-color: var(--org-line) !important;
+    }
+
+    /* Node base – consistent card style */
     .orgchart .node {
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-      border: 1px solid #d0d7de;
-      background: #ffffff;
-      padding: 8px;
+      position: relative;
+      z-index: 1;
+      overflow: visible;
+      border-radius: var(--org-radius);
+      box-shadow: var(--org-shadow);
+      border: 1px solid var(--org-border);
+      background: var(--org-surface-alt);
+      padding: 10px 12px;
       box-sizing: border-box;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
 
-    .orgchart .node:not(.group-node) {
-      width: 190px;
+    .orgchart .node:hover {
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+    }
+
+    .orgchart .node:not(.group-node):not(.node-aggregate) {
+      width: 220px;
+      min-width: 220px;
       min-height: 72px;
-      max-height: 72px;
+      /* allow cards to grow vertically so titles can wrap */
       display: flex;
       flex-direction: column;
       justify-content: center;
       text-align: center;
     }
 
-    .org-node-name,
-    .org-node-title {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
     .org-node-name {
+      /* allow names to wrap so full name is visible */
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
       font-weight: 600;
       font-size: 13px;
       margin-bottom: 4px;
-      color: #111827;
+      color: var(--org-text);
     }
 
     .org-node-title {
-      font-size: 11px;
-      color: #4b5563;
+      /* allow multi-line titles so they are fully readable */
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      font-size: 12px;
+      color: var(--org-text-muted);
     }
 
-    /* Node variants */
+    /* Hide plugin’s side expand/collapse controls – we use one centered icon only */
+    .orgchart .node .edge,
+    .orgchart .node .toggleBtn,
+    .orgchart .node .verticalEdge,
+    .orgchart .node .horizontalEdge,
+    .orgchart .backToCompactSymbol,
+    .orgchart .backToLooseSymbol {
+      display: none !important;
+    }
+
+    /* Expand/collapse icon at bottom edge of card – circle with chevron */
+    .orgchart .node.node-has-children {
+      padding-bottom: 28px;
+    }
+
+    .orgchart .node-expand-icon {
+      position: absolute;
+      left: 50%;
+      bottom: -12px;
+      transform: translateX(-50%);
+      z-index: 2;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #e9d5ff;
+      color: #7c3aed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1;
+      pointer-events: none;
+      box-shadow: 0 1px 3px rgba(124, 58, 237, 0.2);
+    }
+
+    .orgchart .node-expand-icon::after {
+      content: '▼';
+    }
+
+    .orgchart .hierarchy:not(.isChildrenCollapsed) > .node .node-expand-icon::after {
+      content: '▲';
+    }
+
+    .orgchart .node.team-leader .node-expand-icon {
+      background: #e9d5ff;
+      color: #7c3aed;
+      box-shadow: 0 1px 3px rgba(124, 58, 237, 0.2);
+    }
+
+    .orgchart .node.group-node .node-expand-icon {
+      background: rgba(233, 213, 255, 0.9);
+      color: #6d28d9;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Leader cards – clear hierarchy */
     .orgchart .node.team-leader {
-      border-color: #2563eb;
+      border-color: #3b82f6;
       background: #eff6ff;
     }
 
-    .orgchart .node.focused {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+    .orgchart .node.team-leader .org-node-title {
+      color: #1d4ed8;
     }
 
+    .orgchart .node.focused {
+      background: #fef9c3;
+      border-color: #eab308;
+      box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.25);
+    }
+
+    /* Group headers – dark, high-contrast */
     .orgchart .node.group-node {
-      background: #111827;
-      border-color: #111827;
-      color: #f9fafb;
-      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.35);
-      padding: 10px 14px;
+      background: var(--org-group-slate);
+      border-color: var(--org-group-slate);
+      color: #f8fafc;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.2);
+      padding: 12px 16px;
+    }
+
+    .group-node .org-node-name,
+    .group-node .org-node-title {
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.35;
+      color: #f1f5f9 !important;
     }
 
     .group-node .org-node-name {
-      font-size: 14px;
-      letter-spacing: 0.04em;
+      font-size: 13px;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
-      margin-bottom: 6px;
-      color: #f9fafb;
+      margin-bottom: 4px;
+      font-weight: 600;
     }
 
     .group-node .org-node-title {
       font-size: 11px;
-      color: #e5e7eb;
+      opacity: 0.9;
     }
 
-    .orgchart .node.role-chro {
-      background: #020617;
-      border-color: #020617;
-      color: #f9fafb;
-      padding: 14px 18px;
+    .group-node {
+      min-width: 200px;
+      max-width: 340px;
+    }
+
+    /* TRAINEES & EARLY CAREER header – dark purple, always readable.
+       Override the plugin’s .compact rule which forces background #eee/#fff. */
+    .orgchart .node.group-node-trainees,
+    .orgchart .node.group-node-trainees.compact,
+    .orgchart .node.compact.group-node-trainees,
+    .orgchart .hierarchy > .node.group-node-trainees {
+      background: #4c1d95 !important;
+      background-color: #4c1d95 !important;
+      border-color: #5b21b6 !important;
+      color: #f5f3ff !important;
+    }
+
+    .orgchart .node.group-node-trainees .org-node-name,
+    .orgchart .node.group-node-trainees .org-node-title,
+    .group-node-trainees .org-node-name,
+    .group-node-trainees .org-node-title,
+    .orgchart .node.group-node-trainees .title,
+    .orgchart .node.group-node-trainees .content {
+      color: #f5f3ff !important;
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+
+    /* Trainees group header: enough width so subtitle isn’t cut off */
+    .orgchart .node.group-node-trainees {
       min-width: 260px;
       max-width: 420px;
+      padding: 12px 16px;
+      overflow: visible;
+    }
+
+    /* Trainees compact container must not be limited by .group-node max-width */
+    .orgchart .node.compact.group-node-trainees.group-node,
+    .orgchart .hierarchy > .node.compact.group-node-trainees.group-node {
+      max-width: min(1200px, 95vw) !important;
+    }
+
+    .orgchart .node.group-node-trainees .org-node-title {
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    /* Compact trainees grid: let container grow to fit all cards.
+       Plugin sets .node.compact to width:140px and height:50px – override both. */
+    .orgchart .node.compact.group-node-trainees,
+    .orgchart .hierarchy > .node.compact.group-node-trainees {
+      overflow: visible !important;
+      padding: 14px !important;
+      width: auto !important;
+      min-width: 280px !important;
+      max-width: min(1200px, 95vw) !important;
+      height: auto !important;
+      min-height: 100px !important;
+    }
+
+    /* Inner wrapper that holds the card grid – no fixed size so container can grow */
+    .orgchart .node.compact.group-node-trainees .nodes,
+    .orgchart .node.compact.group-node-trainees .hierarchy,
+    .orgchart .hierarchy > .node.compact.group-node-trainees .nodes {
+      overflow: visible !important;
+      height: auto !important;
+      width: auto !important;
+    }
+
+    .orgchart .node.compact .node.role-trainee {
+      overflow: visible;
+    }
+
+    /* CHRO – top-level emphasis */
+    .orgchart .node.role-chro {
+      background: var(--org-primary-dark);
+      border-color: var(--org-primary);
+      color: #faf5ff;
+      padding: 16px 20px;
+      min-width: 280px;
+      max-width: 440px;
+      box-shadow: 0 8px 24px rgba(87, 6, 140, 0.25);
     }
 
     .orgchart .node.role-chro .org-node-name {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 700;
-      color: #f9fafb;
+      color: #faf5ff;
     }
 
     .orgchart .node.role-chro .org-node-title {
       font-size: 12px;
-      color: #e5e7eb;
+      color: #e9d5ff;
     }
 
-    .orgchart .node.role-trainee:not(.group-node) {
-      background: #f5f3ff;
-      border-color: #a855f7;
+    /* Trainee person cards – high contrast so names and roles are always readable.
+       Override plugin compact styles that can force light bg or light text. */
+    .orgchart .node.role-trainee:not(.group-node),
+    .orgchart .node.compact .node.role-trainee,
+    .orgchart .node.compact.even .node.role-trainee,
+    .orgchart .node.compact.odd .node.role-trainee {
+      background: #e0d8f4 !important;
+      background-color: #e0d8f4 !important;
+      border: 1px solid #6d28d9 !important;
+      border-color: #6d28d9 !important;
+      min-width: 200px;
+      max-width: 220px;
+      color: #1e1b4b !important;
     }
+
+    .orgchart .node.role-trainee:not(.group-node) .org-node-name,
+    .orgchart .node.role-trainee:not(.group-node) .org-node-title,
+    .orgchart .node.compact .node.role-trainee .org-node-name,
+    .orgchart .node.compact .node.role-trainee .org-node-title,
+    .orgchart .node.role-trainee .title,
+    .orgchart .node.role-trainee .content,
+    .orgchart .node.role-trainee [class*="org-node"] {
+      color: #1e1b4b !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+    }
+
+    .orgchart .node.role-trainee:not(.group-node) .org-node-title,
+    .orgchart .node.compact .node.role-trainee .org-node-title,
+    .orgchart .node.role-trainee .org-node-title {
+      color: #312e81 !important;
+      font-size: 12px !important;
+      font-weight: 500 !important;
+    }
+
+    /* Ensure no inherited light text inside trainee cards */
+    .orgchart .node.role-trainee .org-node-name,
+    .orgchart .node.role-trainee .org-node-title {
+      color: #1e1b4b !important;
+    }
+
+    .orgchart .node.role-trainee .org-node-title {
+      color: #312e81 !important;
+    }
+
+    /* Plugin may wrap content in .content with white bg – keep our card color */
+    .orgchart .node.role-trainee .content {
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+
+    /* Placeholder / aggregate nodes e.g. "(2) Managers" */
+    .orgchart .node.node-aggregate {
+      background: #f1f5f9;
+      border-style: dashed;
+      border-color: #94a3b8;
+      color: var(--org-text-muted);
+    }
+
+    .node-aggregate .org-node-name,
+    .node-aggregate .org-node-title {
+      font-style: italic;
+      font-size: 12px;
+    }
+
+    /* Search bar – visible, in right toolbar */
+    .right-toolbar .org-search {
+      width: 100%;
+      box-sizing: border-box;
+      font-family: 'Outfit', sans-serif !important;
+      border: 2px solid var(--org-border) !important;
+      border-radius: var(--org-radius-sm) !important;
+      padding: 10px 14px !important;
+      font-size: 13px !important;
+      font-weight: 500;
+      background: #fff !important;
+      color: var(--org-text) !important;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+    }
+    .right-toolbar .org-search::placeholder {
+      color: var(--org-text-muted);
+    }
+    .right-toolbar .org-search:focus {
+      outline: none;
+      border-color: var(--org-primary) !important;
+      box-shadow: 0 0 0 3px rgba(87, 6, 140, 0.2);
+    }
+
+    /* Tab bar – view switcher */
+    .org-tabs {
+      display: flex;
+      gap: 4px;
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 11;
+      background: var(--org-surface-alt);
+      padding: 4px;
+      border-radius: var(--org-radius);
+      box-shadow: var(--org-shadow);
+      border: 1px solid var(--org-border);
+    }
+
+    .org-tab {
+      padding: 8px 14px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--org-text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--org-radius-sm);
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .org-tab:hover {
+      color: var(--org-text);
+      background: var(--org-primary-light);
+    }
+
+    .org-tab.active {
+      color: var(--org-primary);
+      background: var(--org-primary-light);
+    }
+
+    /* View-specific layout and density */
+    body.view-leadership .orgchart .level { padding-top: 12px; padding-bottom: 12px; }
+    body.view-staff .orgchart .level { padding-top: 16px; padding-bottom: 16px; }
+    body.view-staff .orgchart .node:not(.group-node) .org-node-title { font-size: 12px; }
+    body.view-trainees .orgchart .level { padding-top: 10px; padding-bottom: 10px; }
   </style>
 </head>
 <body>
   <div class="hint-bar">Tip: Click a group or leader to expand their team.</div>
+  <nav class="org-tabs" id="orgTabs" aria-label="Chart view">
+    <button type="button" class="org-tab active" data-view="leadership" aria-pressed="true">Leadership & Management</button>
+    <button type="button" class="org-tab" data-view="staff" aria-pressed="false">Professional Staff</button>
+    <button type="button" class="org-tab" data-view="trainees" aria-pressed="false">Trainees & Early Career</button>
+  </nav>
+  <div class="right-toolbar" id="rightToolbar" aria-label="Chart tools">
+    <input type="search" placeholder="Search by name…" class="org-search" id="orgSearch" aria-label="Search employees by name" />
+    <div class="chart-controls" id="chartControls" aria-label="Chart expand and compress">
+      <button type="button" class="org-btn" id="btnExpandAll">Expand chart</button>
+      <button type="button" class="org-btn" id="btnCompressChart">Compress chart</button>
+    </div>
+  </div>
   <div id="chart-container"></div>
+  <div class="zoom-slider-bar" id="zoomSliderBar" aria-label="Chart zoom and export">
+    <button type="button" class="zoom-slider-icon zoom-out" id="zoomSliderOut" title="Zoom out" aria-label="Zoom out">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6"/></svg>
+    </button>
+    <div class="zoom-slider-track-wrap">
+      <input type="range" class="zoom-slider-input" id="zoomSliderInput" min="0" max="100" value="33" aria-label="Zoom level" />
+    </div>
+    <button type="button" class="zoom-slider-icon zoom-in" id="zoomSliderIn" title="Zoom in" aria-label="Zoom in">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+    </button>
+    <span class="zoom-slider-value" id="zoomLevel" aria-live="polite">100%</span>
+    <div class="zoom-bar-divider" aria-hidden="true"></div>
+    <button type="button" class="org-btn zoom-bar-download" id="btnDownloadPng" title="Download chart as PNG">Download as PNG</button>
+  </div>
 
   <!-- Data from server (Jinja injects here; parsed by JS so script block stays valid JS) -->
   <script type="application/json" id="org-chart-data">{{ org_data | tojson }}</script>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/orgchart@3.8.0/dist/js/jquery.orgchart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    var orgData = JSON.parse(document.getElementById('org-chart-data').textContent);
+    var orgData = null;
+    try {
+      var dataEl = document.getElementById('org-chart-data');
+      var raw = dataEl ? dataEl.textContent : '';
+      if (raw && raw.trim() && raw !== 'null') {
+        orgData = JSON.parse(raw);
+      }
+    } catch (e) {
+      console.error('Failed to parse org chart data:', e);
+    }
 
     $(function() {
       var $container = $('#chart-container');
+      var currentView = 'leadership';
+      var initialCollapsedState = [];
+      var chartZoomLevel = 1;
+      var baseChartWidth = 0;
+      var baseChartHeight = 0;
+      var zoomMin = 0.5;
+      var zoomMax = 2;
+      var zoomStep = 0.15;
 
-      // --- Helpers: chart ref and scroll positioning ---
+      if (!orgData || (typeof orgData === 'object' && !orgData.name && !orgData.children)) {
+        $container.html(
+          '<div style="padding: 40px; text-align: center; color: #4b5563;">' +
+          '<p style="font-size: 16px; margin-bottom: 8px;">No chart data available.</p>' +
+          '<p style="font-size: 14px;">The file may be empty, missing the "Org Chart" sheet, or missing required columns (Unique Identifier, Name).</p>' +
+          '<p style="margin-top: 16px;"><a href="/" style="color: #57068c;">&larr; Upload another file</a></p>' +
+          '</div>'
+        );
+        return;
+      }
+
       function getChart() {
         return $container.find('.orgchart');
+      }
+
+      function applyZoom() {
+        var $wrapper = $container.find('.chart-zoom-wrapper');
+        var $chart = $container.find('.chart-zoom-wrapper .orgchart');
+        if (!$wrapper.length || !$chart.length || !baseChartWidth) return;
+        var w = baseChartWidth * chartZoomLevel;
+        var h = baseChartHeight * chartZoomLevel;
+        $wrapper.css({ width: w + 'px', height: h + 'px' });
+        $chart.css({ transform: 'scale(' + chartZoomLevel + ')', transformOrigin: '0 0' });
+        var $level = $('#zoomLevel');
+        if ($level.length) $level.text(Math.round(chartZoomLevel * 100) + '%');
+        var sliderEl = document.getElementById('zoomSliderInput');
+        if (sliderEl) sliderEl.value = Math.round((chartZoomLevel - zoomMin) / (zoomMax - zoomMin) * 100);
       }
 
       function centerChart() {
         var $chart = getChart();
         if (!$chart.length) return;
-        var chartWidth = $chart.outerWidth();
+        var $wrapper = $chart.closest('.chart-zoom-wrapper');
+        var chartWidth = $wrapper.length ? $wrapper.outerWidth() : $chart.outerWidth();
         var containerWidth = $container.width();
         if (chartWidth > containerWidth) {
           $container.scrollLeft((chartWidth - containerWidth) / 2);
@@ -198,93 +767,300 @@
         $container.scrollLeft(targetScrollLeft);
       }
 
-      // --- Build org chart ---
-      $container.orgchart({
-        data: orgData,
-        nodeTitle: 'name',
-        nodeContent: 'shortTitle',
-        pan: true,
-        zoom: true,
-        draggable: false,
-        direction: 't2b',
-        visibleLevel: 3,
-        verticalLevel: 4,
-        nodeTemplate: function(data) {
-          if (data.isGroup) {
-            var subtitle = data.title
-              ? '<div class="org-node-title">' + data.title + '</div>'
+      /** Return a deep clone of root with children filtered by view. */
+      function getDataForTab(view) {
+        var root = JSON.parse(JSON.stringify(orgData));
+        var children = root.children || [];
+        var ids = { leaders: 'GROUP_LEADERS', staff: 'GROUP_STAFF', trainees: 'GROUP_TRAINEES' };
+        var filtered = [];
+        if (view === 'leadership') {
+          filtered = children.filter(function(c) { return c.id === ids.leaders; });
+        } else if (view === 'staff') {
+          filtered = children.filter(function(c) { return c.id === ids.staff; });
+        } else if (view === 'trainees') {
+          filtered = children.filter(function(c) { return c.id === ids.trainees; });
+        }
+        root.children = filtered;
+        return root;
+      }
+
+      function buildChart(data) {
+        $container.empty();
+        $container.orgchart({
+          data: data,
+          nodeTitle: 'name',
+          nodeContent: 'shortTitle',
+          pan: true,
+          zoom: false,
+          draggable: false,
+          direction: 't2b',
+          visibleLevel: 20,
+          verticalLevel: 5,
+          nodeTemplate: function(data) {
+            if (data.isGroup) {
+              var subtitle = data.title
+                ? '<div class="org-node-title">' + data.title + '</div>'
+                : '';
+              return '<div class="org-node-name">' + (data.name || '') + '</div>' + subtitle;
+            }
+            var displayTitle = data.shortTitle || data.title || '';
+            var titleLine = displayTitle
+              ? '<div class="org-node-title">' + displayTitle + '</div>'
               : '';
-            return '<div class="org-node-name">' + (data.name || '') + '</div>' + subtitle;
+            return '<div class="org-node-name">' + (data.name || '') + '</div>' + titleLine;
+          },
+          createNode: function($node, data) {
+            if (data.className) {
+              $node.addClass(data.className);
+            }
+            if (data.isGroup) {
+              $node.addClass('group-node');
+              if (data.id === 'GROUP_TRAINEES') {
+                $node.addClass('group-node-trainees');
+              }
+              if (data.id === 'GROUP_STAFF') {
+                $node.addClass('group-node-staff');
+              }
+            } else if (data.isLeader) {
+              $node.addClass('team-leader');
+            }
+            if (data.name && String(data.name).trim().indexOf('(') === 0) {
+              $node.addClass('node-aggregate');
+            }
+            if (data.children && data.children.length) {
+              $node.addClass('node-has-children');
+              $node.append('<span class="node-expand-icon" aria-hidden="true"></span>');
+            }
+            var tooltipParts = [];
+            if (data.name) tooltipParts.push(data.name);
+            if (data.title) tooltipParts.push(data.title);
+            if (data.org) tooltipParts.push(data.org);
+            if (tooltipParts.length > 0) {
+              $node.attr('title', tooltipParts.join(' — '));
+            }
+            $node.on('click', function() {
+              var $clicked = $(this);
+              $('.orgchart .node').removeClass('focused');
+              $clicked.addClass('focused');
+              centerOnNode($clicked);
+              if ($clicked.hasClass('node-has-children')) {
+                var $h = $clicked.closest('li.hierarchy');
+                if ($h.length) {
+                  $h.toggleClass('isChildrenCollapsed');
+                  var $childrenList = $h.children('.nodes');
+                  if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
+                  $childrenList.toggleClass('hidden');
+                }
+              }
+            });
           }
-          var displayTitle = data.shortTitle || data.title || '';
-          var titleLine = displayTitle
-            ? '<div class="org-node-title">' + displayTitle + '</div>'
-            : '';
-          return '<div class="org-node-name">' + (data.name || '') + '</div>' + titleLine;
-        },
-        createNode: function($node, data) {
-          if (data.className) {
-            $node.addClass(data.className);
+        });
+
+        $container.find('.node.group-node-staff').each(function() {
+          var $childrenContainer = $(this).next('.nodes');
+          if ($childrenContainer.length) {
+            $childrenContainer.addClass('vertical');
           }
-          if (data.isGroup) {
-            $node.addClass('group-node');
-          } else if (data.isLeader) {
-            $node.addClass('team-leader');
+        });
+
+        centerChart();
+        setTimeout(function() {
+          var $chart = $container.find('.orgchart');
+          if ($chart.length && !$chart.parent().hasClass('chart-zoom-wrapper')) {
+            $chart.wrap('<div class="chart-zoom-wrapper"></div>');
           }
-          var tooltipParts = [];
-          if (data.name) tooltipParts.push(data.name);
-          if (data.title) tooltipParts.push(data.title);
-          if (data.org) tooltipParts.push(data.org);
-          if (tooltipParts.length > 0) {
-            $node.attr('title', tooltipParts.join(' — '));
+          $chart = $container.find('.orgchart');
+          var $wrapper = $chart.closest('.chart-zoom-wrapper');
+          if ($wrapper.length) {
+            $wrapper.css('display', 'inline-block');
+            baseChartWidth = $chart.outerWidth();
+            baseChartHeight = $chart.outerHeight();
+            chartZoomLevel = 1;
+            applyZoom();
           }
-          $node.on('click', function() {
-            $('.orgchart .node').removeClass('focused');
-            $(this).addClass('focused');
-            centerOnNode($(this));
+          var maxInitialLevel = 3;
+          function setDepth($list, level) {
+            if (!$list || !$list.length) return;
+            $list.children('li.hierarchy').each(function() {
+              var $h = $(this);
+              $h.data('oc-depth', level);
+              var $childrenList = $h.children('.nodes');
+              if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
+              if ($childrenList.length) setDepth($childrenList, level + 1);
+            });
+          }
+          var $rootList = $chart.children('ul').first();
+          if (!$rootList.length) $rootList = $chart.find('ul.nodes').first();
+          setDepth($rootList, 1);
+          $container.find('.orgchart .hierarchy').each(function() {
+            var $h = $(this);
+            var depth = $h.data('oc-depth');
+            if (depth > maxInitialLevel) {
+              $h.addClass('isChildrenCollapsed');
+              var $childrenList = $h.children('.nodes');
+              if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
+              $childrenList.addClass('hidden');
+            }
           });
+          var $root = $container.find('.orgchart .node.role-chro').first();
+          if (!$root.length) $root = $container.find('.orgchart .node').first();
+          if ($root.length) {
+            centerOnNode($root);
+            $('.orgchart .node').removeClass('focused');
+            $root.addClass('focused');
+          }
+          initialCollapsedState = [];
+          $container.find('.orgchart .hierarchy').each(function() {
+            initialCollapsedState.push($(this).hasClass('isChildrenCollapsed'));
+          });
+        }, 220);
+      }
+
+      function expandAll() {
+        $container.find('.orgchart .hierarchy').removeClass('isChildrenCollapsed');
+        $container.find('.orgchart .nodes').removeClass('hidden');
+      }
+
+      function compressChart() {
+        $container.find('.orgchart .hierarchy').each(function(i) {
+          var $h = $(this);
+          var $childrenList = $h.children('.nodes');
+          if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
+          if (i < initialCollapsedState.length && initialCollapsedState[i]) {
+            $h.addClass('isChildrenCollapsed');
+            $childrenList.addClass('hidden');
+          } else {
+            $h.removeClass('isChildrenCollapsed');
+            $childrenList.removeClass('hidden');
+          }
+        });
+      }
+
+      function switchView(view) {
+        currentView = view;
+        $('body').removeClass('view-leadership view-staff view-trainees').addClass('view-' + view);
+        $('#orgTabs .org-tab').removeClass('active').attr('aria-pressed', 'false');
+        $('#orgTabs .org-tab[data-view="' + view + '"]').addClass('active').attr('aria-pressed', 'true');
+        buildChart(getDataForTab(view));
+      }
+
+      $('body').addClass('view-leadership');
+
+      try {
+        buildChart(getDataForTab('leadership'));
+      } catch (err) {
+        console.error('Org chart init failed:', err);
+        $container.html(
+          '<div style="padding: 40px; text-align: center; color: #4b5563;">' +
+          '<p style="font-size: 16px; margin-bottom: 8px;">Could not draw the chart.</p>' +
+          '<p style="font-size: 14px;">Check the browser console for details.</p>' +
+          '<p style="margin-top: 16px;"><a href="/" style="color: #57068c;">&larr; Try another file</a></p>' +
+          '</div>'
+        );
+        return;
+      }
+
+      $('#orgTabs').on('click', '.org-tab', function() {
+        var view = $(this).data('view');
+        if (view && view !== currentView) {
+          switchView(view);
         }
       });
 
-      // --- Search: jump to person by name ---
-      var $search = $('<input type="search" placeholder="Search by name…" class="org-search">').css({
-        position: 'absolute',
-        top: '10px',
-        right: '16px',
-        zIndex: 11,
-        padding: '6px 10px',
-        borderRadius: '999px',
-        border: '1px solid #d1d5db',
-        fontSize: '13px',
-        outline: 'none'
+      $('#btnExpandAll').on('click', function() {
+        expandAll();
       });
-      $('body').append($search);
+      $('#btnCompressChart').on('click', function() {
+        compressChart();
+      });
+
+      $('#btnDownloadPng').on('click', function() {
+        var $chart = $container.find('.orgchart');
+        if (!$chart.length) return;
+        if (typeof html2canvas === 'undefined') {
+          alert('Export is not available. Please refresh the page and try again.');
+          return;
+        }
+        var btn = document.getElementById('btnDownloadPng');
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Preparing…';
+        }
+        html2canvas($chart[0], {
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#f8f9fb',
+          scale: 2
+        }).then(function(canvas) {
+          var link = document.createElement('a');
+          link.download = 'org-chart.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Download as PNG';
+          }
+        }).catch(function(err) {
+          console.error('Download as PNG failed:', err);
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Download as PNG';
+          }
+        });
+      });
+
+      $('#zoomSliderInput').on('input change', function() {
+        var pct = parseInt(this.value, 10) / 100;
+        chartZoomLevel = zoomMin + pct * (zoomMax - zoomMin);
+        applyZoom();
+      });
+      $('#zoomSliderOut').on('click', function() {
+        var sliderEl = document.getElementById('zoomSliderInput');
+        var v = Math.max(0, parseInt(sliderEl.value, 10) - 10);
+        sliderEl.value = v;
+        chartZoomLevel = zoomMin + (v / 100) * (zoomMax - zoomMin);
+        applyZoom();
+      });
+      $('#zoomSliderIn').on('click', function() {
+        var sliderEl = document.getElementById('zoomSliderInput');
+        var v = Math.min(100, parseInt(sliderEl.value, 10) + 10);
+        sliderEl.value = v;
+        chartZoomLevel = zoomMin + (v / 100) * (zoomMax - zoomMin);
+        applyZoom();
+      });
+
+      function expandPathToNode($node) {
+        var $h = $node.closest('li.hierarchy');
+        while ($h.length) {
+          $h.removeClass('isChildrenCollapsed');
+          var $childrenList = $h.children('.nodes');
+          if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
+          $childrenList.removeClass('hidden');
+          var $list = $h.parent();
+          if (!$list.length || !$list.hasClass('nodes')) break;
+          var $parentHierarchy = $list.parent();
+          if (!$parentHierarchy.length || $parentHierarchy.hasClass('orgchart')) break;
+          $h = $parentHierarchy;
+        }
+      }
+
+      var $search = $('#orgSearch');
 
       $search.on('input', function() {
         var q = $(this).val().trim().toLowerCase();
-        $('.orgchart .node').removeClass('focused');
+        var $nodes = $container.find('.node');
+        $nodes.removeClass('focused');
         if (!q) return;
-        var $match = $('.orgchart .node').filter(function() {
-          var name = $(this).find('.org-node-name').text().toLowerCase();
+        var $match = $nodes.filter(function() {
+          var name = $(this).find('.org-node-name').text().trim().toLowerCase();
           return name.indexOf(q) !== -1;
         }).first();
         if ($match.length) {
+          expandPathToNode($match);
           $match.addClass('focused');
           centerOnNode($match);
         }
       });
-
-      // --- Initial view: center and focus root ---
-      centerChart();
-      setTimeout(function() {
-        var $root = $container.find('.orgchart .node.role-chro').first();
-        if (!$root.length) $root = $container.find('.orgchart .node').first();
-        if ($root.length) {
-          centerOnNode($root);
-          $('.orgchart .node').removeClass('focused');
-          $root.addClass('focused');
-        }
-      }, 220);
 
       $(window).on('resize', centerChart);
     });
