@@ -109,6 +109,51 @@ def is_leader_value(v):
     return False
 
 
+def clean_org_name(org_cell_value, director_name):
+    """
+    Column G format is '<organization name> <director name>' or
+    '<organization name> (<director name>)'.
+    Return only the organization name (strip trailing director suffix).
+    """
+    if not org_cell_value or not isinstance(org_cell_value, str):
+        return (org_cell_value or "").strip() if org_cell_value is not None else ""
+    org_cell_value = org_cell_value.strip()
+    if not director_name or not isinstance(director_name, str):
+        return org_cell_value
+    director_name = director_name.strip()
+    if not director_name:
+        return org_cell_value
+    base_lower = org_cell_value.lower()
+    name_lower = director_name.lower()
+
+    # Helper to strip a suffix from the original string, preserving casing
+    def _strip_suffix(orig, suffix):
+        if not suffix:
+            return orig
+        return orig[: -len(suffix)].rstrip()
+
+    # Build possible suffix patterns
+    suffixes = []
+    # " Org (Director, Name)"
+    suffixes.append(" (" + director_name + ")")
+    # " Org Director, Name"
+    suffixes.append(" " + director_name)
+
+    # Also try "First Last" form if name is "Last, First"
+    if "," in director_name:
+        parts = [p.strip() for p in director_name.split(",", 1)]
+        if len(parts) == 2:
+            reversed_name = parts[1] + " " + parts[0]
+            suffixes.append(" (" + reversed_name + ")")
+            suffixes.append(" " + reversed_name)
+
+    for suffix in suffixes:
+        if base_lower.endswith(suffix.lower()):
+            return _strip_suffix(org_cell_value, suffix)
+
+    return org_cell_value
+
+
 def _json_safe_value(v):
     """Convert a value to something JSON-serializable (no NaN/pd.NA)."""
     if v is None:
@@ -132,7 +177,7 @@ def _sanitize_org_node(node):
     if not isinstance(node, dict):
         return node
     out = {}
-    string_keys = ("id", "name", "title", "shortTitle", "org", "className")
+    string_keys = ("id", "name", "title", "shortTitle", "org", "className", "leaderName", "leaderTitle")
     bool_keys = ("isLeader", "isGroup", "collapsed", "compact", "hybrid")
     for k, val in node.items():
         if k == "children":
@@ -167,12 +212,14 @@ def build_org_chart_data(df):
 
     for _, row in df.iterrows():
         uid = row[COL_ID]
-        org_val = row.get(COL_ORG, "")
+        raw_org = row.get(COL_ORG, "")
+        director_name = row.get(COL_NAME, "") or ""
+        org_val = clean_org_name(raw_org, director_name) if is_leader_value(raw_org) else (raw_org or "")
 
         # Title handling
         raw_title = row.get(COL_TITLE, "")
         full_title = raw_title.strip() if isinstance(raw_title, str) else ""
-        leader_flag = is_leader_value(org_val)
+        leader_flag = is_leader_value(raw_org)
 
         short_title = full_title or ""
         if isinstance(short_title, str) and "," in short_title:
@@ -225,6 +272,37 @@ def build_org_chart_data(df):
     if not roots:
         raise RuntimeError("No root nodes detected – cannot build org chart.")
 
+    # ---- Organization containers: wrap each director in a container named by Organization Name ----
+    def wrap_directors_in_org_containers(node):
+        """Replace any child that has non-null Organization Name with an org container wrapping that director."""
+        children = node.get("children", []) or []
+        new_children = []
+        for child in children:
+            if is_leader_value(child.get("org")):
+                org_name = (child.get("org") or "").strip()
+                if org_name:
+                    container = {
+                        "id": "ORG_" + str(child.get("id", "")),
+                        "name": org_name,
+                        "title": "",
+                        "shortTitle": org_name,
+                        "org": "",
+                        "leaderName": child.get("name", ""),
+                        "leaderTitle": (child.get("shortTitle") or child.get("title") or "").strip(),
+                        "children": child.get("children", []) or [],
+                        "isLeader": True,
+                        "isGroup": True,
+                        "compact": False,
+                    }
+                    child["org"] = ""  # no longer repeat org name on director row
+                    new_children.append(container)
+                else:
+                    new_children.append(child)
+            else:
+                new_children.append(child)
+            wrap_directors_in_org_containers(child)
+        node["children"] = new_children
+
     if len(roots) == 1:
         root_id = roots[0]
         root_node = nodes[root_id]
@@ -241,6 +319,8 @@ def build_org_chart_data(df):
             "isLeader": True,
             "isGroup": True,
         }
+
+    wrap_directors_in_org_containers(root_node)
 
     # Grouping under CHRO (virtual group nodes)
     group_ids = []
@@ -282,6 +362,9 @@ def build_org_chart_data(df):
         }
 
         for child in original_children:
+            if child.get("isGroup") and str(child.get("id", "")).startswith("ORG_"):
+                group_leaders["children"].append(child)
+                continue
             title = (child.get("title") or "").lower()
             if "trainee" in title:
                 group_trainees["children"].append(child)
