@@ -76,6 +76,27 @@
       border: 1px solid var(--org-border);
       border-radius: var(--org-radius);
       box-shadow: var(--org-shadow);
+      user-select: none;
+    }
+    .right-toolbar .toolbar-drag-handle {
+      cursor: move;
+      padding: 6px 12px;
+      margin: -12px -12px 8px -12px;
+      border-radius: var(--org-radius) var(--org-radius) 0 0;
+      color: var(--org-text-muted);
+      font-size: 14px;
+      line-height: 1;
+      text-align: center;
+      border-bottom: 1px solid var(--org-border);
+      background: var(--org-surface);
+    }
+    .right-toolbar .toolbar-drag-handle:hover {
+      color: var(--org-primary);
+      background: var(--org-primary-light);
+    }
+    .right-toolbar .toolbar-drag-handle::before {
+      content: '⋮⋮';
+      letter-spacing: 2px;
     }
     .chart-controls {
       display: flex;
@@ -663,6 +684,7 @@
     <button type="button" class="org-tab" data-view="trainees" aria-pressed="false">Trainees & Early Career</button>
   </nav>
   <div class="right-toolbar" id="rightToolbar" aria-label="Chart tools">
+    <div class="toolbar-drag-handle" id="toolbarDragHandle" aria-label="Drag to move panel" title="Drag to move panel"></div>
     <input type="search" placeholder="Search by name…" class="org-search" id="orgSearch" aria-label="Search employees by name" />
     <div class="chart-controls" id="chartControls" aria-label="Chart expand and compress">
       <button type="button" class="org-btn" id="btnExpandAll">Expand chart</button>
@@ -1061,6 +1083,34 @@
           centerOnNode($match);
         }
       });
+
+      (function makeToolbarDraggable() {
+        var panel = document.getElementById('rightToolbar');
+        var handle = document.getElementById('toolbarDragHandle');
+        if (!panel || !handle) return;
+        var startX, startY, startLeft, startTop;
+        function onMouseMove(e) {
+          var dx = e.clientX - startX;
+          var dy = e.clientY - startY;
+          panel.style.left = (startLeft + dx + window.scrollX) + 'px';
+          panel.style.top = (startTop + dy + window.scrollY) + 'px';
+          panel.style.right = 'auto';
+        }
+        function onMouseUp() {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+        }
+        handle.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          var rect = panel.getBoundingClientRect();
+          startX = e.clientX;
+          startY = e.clientY;
+          startLeft = rect.left;
+          startTop = rect.top;
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        });
+      })();
 
       $(window).on('resize', centerChart);
     });
