@@ -639,6 +639,65 @@
       max-width: 220px;
     }
 
+    /* Third-Party Resources: child-only container (parent excluded); grid attached below parent */
+    .orgchart .node.group-node-staff-grid.group-node {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      min-height: 0 !important;
+    }
+    .orgchart .node.group-node-staff-grid .org-node-name,
+    .orgchart .node.group-node-staff-grid .org-node-title {
+      font-size: 11px !important;
+      color: var(--org-text-muted) !important;
+    }
+    .orgchart .node.group-node-staff-grid.compact {
+      overflow: visible !important;
+      padding: 8px 0 0 !important;
+      width: auto !important;
+      min-width: 0 !important;
+      max-width: min(1200px, 95vw) !important;
+      height: auto !important;
+      min-height: 0 !important;
+    }
+
+    /* Third-Party Resources: container (grid) format for any node with 5+ children (compact: true) */
+    body.view-staff .orgchart .node.compact {
+      overflow: visible !important;
+      padding: 14px !important;
+      width: auto !important;
+      min-width: 280px !important;
+      max-width: min(1200px, 95vw) !important;
+      height: auto !important;
+      min-height: 100px !important;
+    }
+    body.view-staff .orgchart .node.compact .nodes,
+    body.view-staff .orgchart .node.compact .hierarchy,
+    body.view-staff .orgchart .node.compact .nodes .hierarchy {
+      overflow: visible !important;
+      height: auto !important;
+      width: auto !important;
+    }
+    body.view-staff .orgchart .node.compact .node:not(.group-node) {
+      overflow: visible;
+      min-width: 200px;
+      max-width: 220px;
+    }
+    /* Child cards inside staff grid: ensure name and title are visible */
+    body.view-staff .orgchart .node.group-node-staff-grid .node:not(.group-node) .org-node-name,
+    body.view-staff .orgchart .node.group-node-staff-grid .node:not(.group-node) .org-node-title,
+    body.view-staff .orgchart .node.compact .node .org-node-name,
+    body.view-staff .orgchart .node.compact .node .org-node-title {
+      color: var(--org-text) !important;
+      font-size: 13px !important;
+    }
+    body.view-staff .orgchart .node.group-node-staff-grid .node:not(.group-node) .org-node-title,
+    body.view-staff .orgchart .node.compact .node .org-node-title {
+      color: var(--org-text-muted) !important;
+      font-size: 12px !important;
+    }
+
     /* CHRO – top-level emphasis */
     .orgchart .node.role-chro {
       background: var(--org-primary-dark);
@@ -1300,6 +1359,9 @@
               }
               if (data.id === 'GROUP_STAFF') {
                 $node.addClass('group-node-staff');
+              }
+              if (data.id && String(data.id).indexOf('STAFF_GRID_') === 0) {
+                $node.addClass('group-node-staff-grid');
               }
               if (isOrgContainer) {
                 $node.addClass('group-node-org');

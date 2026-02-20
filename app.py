@@ -516,6 +516,39 @@ def build_org_chart_data(df, dataset_name=""):
                 if pruned is not None:
                     group_leaders["children"].append(pruned)
 
+        # Third-Party Resources: wrap children in a separate container (compact grid) when > 4; parent stays a normal card
+        _MIN_CHILDREN_FOR_COMPACT = 4
+
+        def wrap_staff_children_in_container(node, min_children=_MIN_CHILDREN_FOR_COMPACT):
+            """If node has more than min_children person children, replace children with one group node that holds them (compact grid). Parent is not compact."""
+            children = node.get("children", []) or []
+            for child in children:
+                wrap_staff_children_in_container(child, min_children=min_children)
+            person_children = [
+                c for c in children
+                if not c.get("isGroup")
+                and isinstance(c.get("name", ""), str)
+                and not (c.get("name", "") or "").strip().startswith("(")
+            ]
+            if len(person_children) > min_children:
+                parent_id = node.get("id", "node")
+                container = {
+                    "id": f"STAFF_GRID_{parent_id}",
+                    "name": "Direct reports",
+                    "title": "",
+                    "shortTitle": "Direct reports",
+                    "org": "",
+                    "children": list(children),
+                    "isLeader": False,
+                    "isGroup": True,
+                    "compact": True,
+                    "className": "group-node-staff-grid",
+                }
+                node["children"] = [container]
+
+        if group_staff["children"]:
+            wrap_staff_children_in_container(group_staff, min_children=_MIN_CHILDREN_FOR_COMPACT)
+
         new_children = []
         for g in (group_leaders, group_staff, group_trainees):
             if g["children"]:
