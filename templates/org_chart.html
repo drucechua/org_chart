@@ -46,6 +46,12 @@
       background: linear-gradient(180deg, var(--org-surface) 0%, var(--org-surface-alt) 35%);
       position: relative;
     }
+    #chart-container.chart-view-centered {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
 
     .hint-bar {
       position: absolute;
@@ -63,8 +69,8 @@
     }
 
     .right-toolbar {
-      position: absolute;
-      top: 14px;
+      position: fixed;
+      bottom: 20px;
       right: 18px;
       z-index: 11;
       display: flex;
@@ -257,23 +263,9 @@
       align-items: flex-start;
     }
 
-    /* Professional Staff: vertical span (stack children below header) */
-    .orgchart .node.group-node-staff + .nodes,
-    .orgchart .node.group-node-staff .nodes {
-      display: block !important;
-      flex-direction: column !important;
+    /* Third-Party Resources: use horizontal spread so hierarchy is visible (overridden in view-staff for L2R layout) */
+    .orgchart .node.group-node-staff + .nodes {
       padding-left: 10px;
-    }
-
-    .orgchart .node.group-node-staff + .nodes .hierarchy,
-    .orgchart .node.group-node-staff .nodes .hierarchy {
-      display: block !important;
-      text-align: left;
-    }
-
-    .orgchart .node.group-node-staff + .nodes .node,
-    .orgchart .node.group-node-staff .nodes .node {
-      margin-bottom: 8px;
     }
 
     .orgchart .level {
@@ -300,6 +292,22 @@
     .orgchart .nodes.vertical .hierarchy::before,
     .orgchart .nodes.vertical .hierarchy::after {
       border-color: var(--org-line) !important;
+    }
+
+    /* Any node marked vertical-stack: stack its children vertically */
+    .orgchart .nodes.vertical {
+      display: block !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+
+    .orgchart .nodes.vertical .hierarchy {
+      display: block !important;
+      text-align: left;
+    }
+
+    .orgchart .nodes.vertical .node {
+      margin-bottom: 8px;
     }
 
     /* Node base – consistent card style */
@@ -520,6 +528,14 @@
       color: #475569;
     }
 
+    .orgchart .node.group-node.group-node-org .org-node-full-title {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+      line-height: 1.35;
+      white-space: normal;
+    }
+
     .group-node {
       min-width: 200px;
       max-width: 340px;
@@ -591,6 +607,36 @@
 
     .orgchart .node.compact .node.role-trainee {
       overflow: visible;
+    }
+
+    /* Third-Party Resources (GROUP_STAFF) – compact grid layout like TRAINEES (data compact: true) */
+    .orgchart .node.compact.group-node-staff.group-node,
+    .orgchart .hierarchy > .node.compact.group-node-staff.group-node {
+      max-width: min(1200px, 95vw) !important;
+    }
+    .orgchart .node.compact.group-node-staff,
+    .orgchart .hierarchy > .node.compact.group-node-staff {
+      overflow: visible !important;
+      padding: 14px !important;
+      width: auto !important;
+      min-width: 280px !important;
+      max-width: min(1200px, 95vw) !important;
+      height: auto !important;
+      min-height: 100px !important;
+    }
+    .orgchart .node.compact.group-node-staff .nodes,
+    .orgchart .node.compact.group-node-staff .hierarchy,
+    .orgchart .hierarchy > .node.compact.group-node-staff .nodes {
+      overflow: visible !important;
+      height: auto !important;
+      width: auto !important;
+    }
+    .orgchart .node.compact.group-node-staff .node:not(.group-node),
+    .orgchart .node.compact .node.role-staff,
+    .orgchart .node.compact .node.role-leader {
+      overflow: visible;
+      min-width: 200px;
+      max-width: 220px;
     }
 
     /* CHRO – top-level emphasis */
@@ -746,12 +792,22 @@
     body.view-leadership .orgchart .level { padding-top: 12px; padding-bottom: 12px; }
     body.view-staff .orgchart .level { padding-top: 16px; padding-bottom: 16px; }
     body.view-staff .orgchart .node:not(.group-node) .org-node-title { font-size: 12px; }
+    /* Third-Party: allow horizontal spread so L2R tree and top-level branches use space */
+    body.view-staff .orgchart .node.group-node-staff + .nodes {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      align-items: flex-start !important;
+    }
+    body.view-staff .orgchart .node.group-node-staff + .nodes > li.hierarchy {
+      display: inline-block !important;
+    }
     body.view-trainees .orgchart .level { padding-top: 10px; padding-bottom: 10px; }
 
-    /* Show by Organization panel – right side, just left of the button */
+    /* Show by Organization panel – right side, just left of the button, bottom-aligned with toolbar */
     .org-list-panel {
       position: fixed;
-      top: 14px;
+      bottom: 20px;
       right: 218px;
       z-index: 30;
       width: min(320px, calc(100vw - 260px));
@@ -887,9 +943,9 @@
 <body>
   <div class="hint-bar">Tip: Click a group or leader to expand their team.</div>
   <nav class="org-tabs" id="orgTabs" aria-label="Chart view">
-    <button type="button" class="org-tab active" data-view="leadership" aria-pressed="true">Leadership & Management</button>
-    <button type="button" class="org-tab" data-view="staff" aria-pressed="false">Professional Staff</button>
-    <button type="button" class="org-tab" data-view="trainees" aria-pressed="false">Trainees & Early Career</button>
+    <button type="button" class="org-tab active" data-view="leadership" aria-pressed="true">NYUAD Employees</button>
+    <button type="button" class="org-tab" data-view="staff" aria-pressed="false">{{ 'Student and Lab Assistants' if 'Human Resources' in (dataset_name | default('')) else 'Third-Party Resources' }}</button>
+    <button type="button" class="org-tab" data-view="trainees" aria-pressed="false">National Talent Management</button>
   </nav>
   <div class="right-toolbar" id="rightToolbar" aria-label="Chart tools">
     <div class="toolbar-drag-handle" id="toolbarDragHandle" aria-label="Drag to move panel" title="Drag to move panel"></div>
@@ -964,6 +1020,12 @@
         return;
       }
 
+      var rootChildren = orgData.children || [];
+      var hasTrainees = rootChildren.some(function(c) { return c.id === 'GROUP_TRAINEES'; });
+      if (!hasTrainees) {
+        $('#orgTabs .org-tab[data-view="trainees"]').hide();
+      }
+
       function getChart() {
         return $container.find('.orgchart');
       }
@@ -974,8 +1036,18 @@
         if (!$wrapper.length || !$chart.length || !baseChartWidth) return;
         var w = baseChartWidth * chartZoomLevel;
         var h = baseChartHeight * chartZoomLevel;
+        var containerWidth = $container.width();
+        var containerHeight = $container.height();
         $wrapper.css({ width: w + 'px', height: h + 'px' });
         $chart.css({ transform: 'scale(' + chartZoomLevel + ')', transformOrigin: '0 0' });
+        var chartFits = w <= containerWidth && h <= containerHeight;
+        if (chartFits && currentView !== 'staff') {
+          $container.addClass('chart-view-centered');
+          $wrapper.addClass('centered-in-viewport');
+        } else {
+          $container.removeClass('chart-view-centered');
+          $wrapper.removeClass('centered-in-viewport');
+        }
         var $level = $('#zoomLevel');
         if ($level.length) $level.text(Math.round(chartZoomLevel * 100) + '%');
         var sliderEl = document.getElementById('zoomSliderInput');
@@ -986,19 +1058,53 @@
         var $chart = getChart();
         if (!$chart.length) return;
         var $wrapper = $chart.closest('.chart-zoom-wrapper');
-        var chartWidth = $wrapper.length ? $wrapper.outerWidth() : $chart.outerWidth();
-        var chartHeight = $wrapper.length ? $wrapper.outerHeight() : $chart.outerHeight();
-        var containerWidth = $container.width();
-        var containerHeight = $container.height();
-        if (chartWidth > containerWidth) {
-          $container.scrollLeft((chartWidth - containerWidth) / 2);
+        var cw = $container.width();
+        var ch = $container.height();
+        var w = $wrapper.length ? $wrapper.outerWidth() : 0;
+        var h = $wrapper.length ? $wrapper.outerHeight() : 0;
+        $container.scrollTop(0);
+        if (w > cw) {
+          $container.scrollLeft(Math.max(0, (w - cw) / 2));
         } else {
           $container.scrollLeft(0);
         }
-        if (chartHeight > containerHeight) {
-          $container.scrollTop((chartHeight - containerHeight) / 2);
+      }
+
+      /** Set zoom so the entire chart fits in the viewport (left, right, top, bottom visible). */
+      function fitChartToView() {
+        if (!baseChartWidth || !baseChartHeight) return;
+        var containerWidth = $container.width();
+        var containerHeight = $container.height();
+        if (containerWidth <= 0 || containerHeight <= 0) return;
+        var inset = 24;
+        var targetW = Math.max(containerWidth - inset * 2, 100);
+        var targetH = Math.max(containerHeight - inset * 2, 100);
+        var scaleW = targetW / baseChartWidth;
+        var scaleH = targetH / baseChartHeight;
+        var scale = Math.min(scaleW, scaleH, zoomMax);
+        scale = Math.max(scale, 0.15);
+        chartZoomLevel = scale;
+        applyZoom();
+        var $wrapper = $container.find('.chart-zoom-wrapper');
+        var isStaffView = (currentView === 'staff');
+        var w = baseChartWidth * chartZoomLevel;
+        var h = baseChartHeight * chartZoomLevel;
+        if ($wrapper.length) {
+          var chartFits = w <= containerWidth && h <= containerHeight;
+          if (chartFits && !isStaffView) {
+            $wrapper.addClass('centered-in-viewport').css({ width: w + 'px', height: h + 'px' });
+            $container.addClass('chart-view-centered');
+          } else {
+            $wrapper.removeClass('centered-in-viewport').css({ width: w + 'px', height: h + 'px' });
+            $container.removeClass('chart-view-centered');
+          }
+        }
+        /* Keep top visible; balance left/right margin when chart is wider than viewport */
+        $container.scrollTop(0);
+        if (w > containerWidth) {
+          $container.scrollLeft(Math.max(0, (w - containerWidth) / 2));
         } else {
-          $container.scrollTop(0);
+          $container.scrollLeft(0);
         }
       }
 
@@ -1076,7 +1182,11 @@
       function updateHintBar() {
         var $hint = $('.hint-bar');
         if (!currentOrgFilter) {
-          $hint.text('Tip: Click a group or leader to expand their team.');
+          if (currentView === 'staff') {
+            $hint.text('Tip: Third-party contractors [C] and their reporting chain. Chart flows left to right. Click a node to expand or collapse.');
+          } else {
+            $hint.text('Tip: Click a group or leader to expand their team.');
+          }
         } else {
           $hint.html(
             'Showing: ' + $('<span>').text(currentOrgFilter).html() +
@@ -1137,7 +1247,8 @@
         if (view === 'leadership') {
           filtered = children.filter(function(c) { return c.id === ids.leaders; });
         } else if (view === 'staff') {
-          filtered = children.filter(function(c) { return c.id === ids.staff; });
+          var staffGroup = children.filter(function(c) { return c.id === ids.staff; })[0];
+          filtered = staffGroup && staffGroup.children ? staffGroup.children : [];
         } else if (view === 'trainees') {
           filtered = children.filter(function(c) { return c.id === ids.trainees; });
         }
@@ -1147,6 +1258,7 @@
 
       function buildChart(data) {
         $container.empty();
+        var isStaffView = (currentView === 'staff');
         $container.orgchart({
           data: data,
           nodeTitle: 'name',
@@ -1154,9 +1266,9 @@
           pan: true,
           zoom: false,
           draggable: false,
-          direction: 't2b',
+          direction: isStaffView ? 'l2r' : 't2b',
           visibleLevel: 20,
-          verticalLevel: 5,
+          verticalLevel: isStaffView ? 999 : 5,
           nodeTemplate: function(data) {
             if (data.isGroup) {
               var subtitle = data.title
@@ -1174,6 +1286,12 @@
             if (data.className) {
               $node.addClass(data.className);
             }
+            if (data.compact) {
+              $node.addClass('compact');
+            }
+            if (data.hybrid && !data.isGroup) {
+              $node.addClass('vertical-stack');
+            }
             var isOrgContainer = data.isGroup && data.id && String(data.id).indexOf('ORG_') === 0;
             if (data.isGroup) {
               $node.addClass('group-node');
@@ -1187,12 +1305,23 @@
                 $node.addClass('group-node-org');
                 var leaderName = data.leaderName || '';
                 var leaderTitle = data.leaderTitle || '';
+                var leaderFullTitle = (data.leaderFullTitle || '').trim();
                 $node.find('.org-node-name').text(leaderName);
                 var $titleEl = $node.find('.org-node-title');
                 if (leaderTitle) {
                   $titleEl.text(leaderTitle).show();
                 } else {
                   $titleEl.empty().hide();
+                }
+                var $fullTitleEl = $node.find('.org-node-full-title');
+                if (leaderFullTitle && leaderFullTitle !== leaderTitle) {
+                  if (!$fullTitleEl.length) {
+                    $node.append('<div class="org-node-full-title"></div>');
+                    $fullTitleEl = $node.find('.org-node-full-title');
+                  }
+                  $fullTitleEl.text(leaderFullTitle).show();
+                } else {
+                  if ($fullTitleEl.length) $fullTitleEl.empty().hide();
                 }
               }
             } else if (data.isLeader) {
@@ -1259,15 +1388,32 @@
                 }
               }
             });
+          },
+          initCompleted: function($chart) {
+            applyVerticalStackToHybridNodes($chart);
+            requestAnimationFrame(function() {
+              applyVerticalStackToHybridNodes($container.find('.orgchart'));
+            });
+            setTimeout(function() {
+              applyVerticalStackToHybridNodes($container.find('.orgchart'));
+            }, 100);
           }
         });
 
-        $container.find('.node.group-node-staff').each(function() {
-          var $childrenContainer = $(this).next('.nodes');
-          if ($childrenContainer.length) {
-            $childrenContainer.addClass('vertical');
-          }
-        });
+        /* Do not add .vertical to GROUP_STAFF subtree so hierarchy stays visible (only top-level branches stacked via CSS) */
+
+        function applyVerticalStackToHybridNodes($chart) {
+          if (!$chart || !$chart.length) return;
+          $chart.find('.node.vertical-stack').each(function() {
+            var $node = $(this);
+            var $li = $node.closest('li.hierarchy');
+            if (!$li.length) return;
+            var $allChildUls = $li.children('ul');
+            if (!$allChildUls.length) $allChildUls = $node.next('.nodes').add($node.siblings('ul'));
+            $allChildUls.addClass('vertical');
+          });
+        }
+        applyVerticalStackToHybridNodes($container.find('.orgchart'));
 
         $(document).off('click.orgchartTooltip').on('click.orgchartTooltip', function(e) {
           if (!$(e.target).closest('#chart-container .orgchart .node').length) {
@@ -1287,15 +1433,8 @@
           if (isOrgFilterView) {
             expandAll();
           }
-          if ($wrapper.length) {
-            $wrapper.css('display', 'inline-block');
-            baseChartWidth = $chart.outerWidth();
-            baseChartHeight = $chart.outerHeight();
-            chartZoomLevel = 1;
-            applyZoom();
-          }
           if (!isOrgFilterView) {
-            var maxInitialLevel = 3;
+            var maxInitialLevel = (currentView === 'staff') ? 8 : 3;
             function setDepth($list, level) {
               if (!$list || !$list.length) return;
               $list.children('li.hierarchy').each(function() {
@@ -1309,44 +1448,43 @@
             var $rootList = $chart.children('ul').first();
             if (!$rootList.length) $rootList = $chart.find('ul.nodes').first();
             setDepth($rootList, 1);
-            $container.find('.orgchart .hierarchy').each(function() {
-              var $h = $(this);
-              var depth = $h.data('oc-depth');
-              if (depth > maxInitialLevel) {
-                $h.addClass('isChildrenCollapsed');
-                var $childrenList = $h.children('.nodes');
-                if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
-                $childrenList.addClass('hidden');
-              }
-            });
+            if (currentView === 'staff') {
+              expandAll();
+            } else {
+              $container.find('.orgchart .hierarchy').each(function() {
+                var $h = $(this);
+                var depth = $h.data('oc-depth');
+                if (depth > maxInitialLevel) {
+                  $h.addClass('isChildrenCollapsed');
+                  var $childrenList = $h.children('.nodes');
+                  if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
+                  $childrenList.addClass('hidden');
+                }
+              });
+            }
           }
           if ($wrapper.length) {
-            if (isOrgFilterView) {
-              var cw = $container.width();
-              var ch = $container.height();
-              var w = $wrapper.outerWidth();
-              var h = $wrapper.outerHeight();
-              if (w < cw || h < ch) {
-                $wrapper.addClass('centered-in-viewport').css({
-                  width: cw + 'px',
-                  height: ch + 'px'
-                });
-                $container.scrollLeft(0).scrollTop(0);
-              } else {
-                $wrapper.removeClass('centered-in-viewport').css({ width: '', height: '' });
+            $wrapper.css('display', 'inline-block');
+            $chart = $container.find('.chart-zoom-wrapper .orgchart');
+            baseChartWidth = $chart.outerWidth();
+            baseChartHeight = $chart.outerHeight();
+            fitChartToView();
+            /* Re-measure after layout (e.g. L2R) settles so fit uses final dimensions */
+            setTimeout(function() {
+              $chart = $container.find('.chart-zoom-wrapper .orgchart');
+              if ($chart.length) {
+                baseChartWidth = $chart.outerWidth();
+                baseChartHeight = $chart.outerHeight();
+                fitChartToView();
               }
-            } else {
-              $wrapper.removeClass('centered-in-viewport').css({ width: '', height: '' });
-            }
+            }, 150);
           }
           var $root = $container.find('.orgchart .node.role-chro').first();
           if (!$root.length) $root = $container.find('.orgchart .node').first();
           if ($root.length) {
-            centerOnNode($root);
             $('.orgchart .node').removeClass('focused');
             $root.addClass('focused');
           }
-          centerChart();
           initialCollapsedState = [];
           $container.find('.orgchart .hierarchy').each(function() {
             initialCollapsedState.push($(this).hasClass('isChildrenCollapsed'));
@@ -1532,6 +1670,7 @@
           panel.style.left = (startLeft + dx + window.scrollX) + 'px';
           panel.style.top = (startTop + dy + window.scrollY) + 'px';
           panel.style.right = 'auto';
+          panel.style.bottom = 'auto';
         }
         function onMouseUp() {
           document.removeEventListener('mousemove', onMouseMove);

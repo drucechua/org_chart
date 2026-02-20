@@ -177,7 +177,7 @@ def _sanitize_org_node(node):
     if not isinstance(node, dict):
         return node
     out = {}
-    string_keys = ("id", "name", "title", "shortTitle", "org", "className", "leaderName", "leaderTitle")
+    string_keys = ("id", "name", "title", "shortTitle", "org", "className", "leaderName", "leaderTitle", "leaderFullTitle")
     bool_keys = ("isLeader", "isGroup", "collapsed", "compact", "hybrid")
     for k, val in node.items():
         if k == "children":
@@ -192,8 +192,9 @@ def _sanitize_org_node(node):
     return out
 
 
-def build_org_chart_data(df):
+def build_org_chart_data(df, dataset_name=""):
     df = df.copy()
+    is_hr_dataset = isinstance(dataset_name, str) and "Human Resources" in dataset_name
 
     df[COL_ID] = df[COL_ID].astype(str)
     df[COL_NAME] = df[COL_NAME].astype(str).str.strip()
@@ -289,6 +290,7 @@ def build_org_chart_data(df):
                         "org": "",
                         "leaderName": child.get("name", ""),
                         "leaderTitle": (child.get("shortTitle") or child.get("title") or "").strip(),
+                        "leaderFullTitle": (child.get("title") or "").strip(),
                         "children": child.get("children", []) or [],
                         "isLeader": True,
                         "isGroup": True,
@@ -322,6 +324,131 @@ def build_org_chart_data(df):
 
     wrap_directors_in_org_containers(root_node)
 
+    # ---- Contractor ([C]) detection and tree helpers ----
+    def is_contractor(node):
+        """True if this is a person (not a group) whose name contains [C]."""
+        if node.get("isGroup"):
+            return False
+        name = (node.get("name") or node.get("leaderName") or "") if isinstance(node, dict) else ""
+        return isinstance(name, str) and "[C]" in name
+
+    def set_contractor_flags(n):
+        """Set n['isContractor'] and n['hasContractorDescendant'] (post-order)."""
+        children = n.get("children", []) or []
+        for c in children:
+            set_contractor_flags(c)
+        n["isContractor"] = is_contractor(n)
+        n["hasContractorDescendant"] = n["isContractor"] or any(
+            c.get("isContractor") or c.get("hasContractorDescendant") for c in children
+        )
+
+    def deep_copy_node(node):
+        """Deep copy a node and its children (for pruning/filtering)."""
+        if not isinstance(node, dict):
+            return node
+        return {
+            **{k: v for k, v in node.items() if k != "children"},
+            "children": [deep_copy_node(c) for c in (node.get("children") or [])],
+        }
+
+    def prune_contractors(node):
+        """Return a copy of the tree with all [C] nodes (and their subtrees) removed. None if node is contractor."""
+        if not isinstance(node, dict):
+            return None
+        if node.get("isContractor"):
+            return None
+        children = node.get("children", []) or []
+        new_children = []
+        for c in children:
+            p = prune_contractors(c)
+            if p is not None:
+                new_children.append(p)
+        return {
+            **{k: v for k, v in node.items() if k != "children"},
+            "children": new_children,
+        }
+
+    def filter_to_contractor_paths(node):
+        """Return a copy containing only nodes that are [C] or ancestors of [C]. None if no contractor in subtree."""
+        if not isinstance(node, dict):
+            return None
+        if not (node.get("isContractor") or node.get("hasContractorDescendant")):
+            return None
+        children = node.get("children", []) or []
+        new_children = []
+        for c in children:
+            f = filter_to_contractor_paths(c)
+            if f is not None:
+                new_children.append(f)
+        return {
+            **{k: v for k, v in node.items() if k != "children"},
+            "children": new_children,
+        }
+
+    set_contractor_flags(root_node)
+
+    # ---- Student/Lab Assistant detection (only when dataset name has "Human Resources") ----
+    def is_student_lab_assistant(node):
+        if node.get("isGroup"):
+            return False
+        title = (node.get("title") or node.get("shortTitle") or "") if isinstance(node, dict) else ""
+        if not isinstance(title, str):
+            return False
+        t = title.lower()
+        return "student assistant" in t or "lab assistant" in t
+
+    def set_student_lab_assistant_flags(n):
+        children = n.get("children", []) or []
+        for c in children:
+            set_student_lab_assistant_flags(c)
+        n["isStudentLabAssistant"] = is_student_lab_assistant(n)
+        n["hasStudentLabAssistantDescendant"] = n["isStudentLabAssistant"] or any(
+            c.get("isStudentLabAssistant") or c.get("hasStudentLabAssistantDescendant") for c in children
+        )
+
+    if is_hr_dataset:
+        set_student_lab_assistant_flags(root_node)
+
+    def prune_for_nyuad(node):
+        """Prune contractors; if HR dataset, also prune student/lab assistants. None if node should be excluded."""
+        if not isinstance(node, dict):
+            return None
+        if node.get("isContractor"):
+            return None
+        if is_hr_dataset and node.get("isStudentLabAssistant"):
+            return None
+        children = node.get("children", []) or []
+        new_children = []
+        for c in children:
+            p = prune_for_nyuad(c)
+            if p is not None:
+                new_children.append(p)
+        return {
+            **{k: v for k, v in node.items() if k != "children"},
+            "children": new_children,
+        }
+
+    def filter_to_staff_tab_paths(node):
+        """Paths to contractors; if HR dataset, also paths to student/lab assistants. None if not on any such path."""
+        if not isinstance(node, dict):
+            return None
+        in_contractor_path = node.get("isContractor") or node.get("hasContractorDescendant")
+        in_assistant_path = is_hr_dataset and (
+            node.get("isStudentLabAssistant") or node.get("hasStudentLabAssistantDescendant")
+        )
+        if not (in_contractor_path or in_assistant_path):
+            return None
+        children = node.get("children", []) or []
+        new_children = []
+        for c in children:
+            f = filter_to_staff_tab_paths(c)
+            if f is not None:
+                new_children.append(f)
+        return {
+            **{k: v for k, v in node.items() if k != "children"},
+            "children": new_children,
+        }
+
     # Grouping under CHRO (virtual group nodes)
     group_ids = []
     if len(roots) == 1:
@@ -347,7 +474,7 @@ def build_org_chart_data(df):
             "children": [],
             "isLeader": True,
             "isGroup": True,
-            "compact": False,
+            "compact": True,
         }
         group_trainees = {
             "id": "GROUP_TRAINEES",
@@ -362,16 +489,32 @@ def build_org_chart_data(df):
         }
 
         for child in original_children:
-            if child.get("isGroup") and str(child.get("id", "")).startswith("ORG_"):
-                group_leaders["children"].append(child)
-                continue
             title = (child.get("title") or "").lower()
-            if "trainee" in title:
+            is_trainee = "trainee" in title
+            is_org = child.get("isGroup") and str(child.get("id", "")).startswith("ORG_")
+            is_leader_title = any(k in title for k in ["director", "head", "manager", "chief"])
+
+            if is_trainee:
                 group_trainees["children"].append(child)
-            elif any(k in title for k in ["director", "head", "manager", "chief"]):
-                group_leaders["children"].append(child)
-            else:
-                group_staff["children"].append(child)
+                continue
+
+            # NYUAD (group_leaders): pruned of [C] and, for HR dataset, of Student/Lab Assistants
+            if is_org or is_leader_title:
+                pruned = prune_for_nyuad(deep_copy_node(child))
+                if pruned is not None:
+                    group_leaders["children"].append(pruned)
+            # Staff tab (Third-Party / Student and Lab Assistants): paths to [C]; for HR dataset also to Student/Lab Assistants
+            if child.get("isContractor") or child.get("hasContractorDescendant") or (
+                is_hr_dataset and (child.get("isStudentLabAssistant") or child.get("hasStudentLabAssistantDescendant"))
+            ):
+                filtered = filter_to_staff_tab_paths(deep_copy_node(child))
+                if filtered is not None:
+                    group_staff["children"].append(filtered)
+            # Non-leader, non-org staff: show in NYUAD only if not excluded by prune
+            if not is_org and not is_leader_title:
+                pruned = prune_for_nyuad(deep_copy_node(child))
+                if pruned is not None:
+                    group_leaders["children"].append(pruned)
 
         new_children = []
         for g in (group_leaders, group_staff, group_trainees):
@@ -382,14 +525,14 @@ def build_org_chart_data(df):
         if new_children:
             root_node["children"] = new_children
 
-    # ---- Mark vertical / hybrid branches from level 4 onward ----
-    def mark_vertical_branches(root, start_level=4, max_horizontal_children=3):
+    # ---- Mark vertical / hybrid branches from level 3 onward ----
+    def mark_vertical_branches(root, start_level=3, max_horizontal_children=2):
         """
         BFS walk:
          - assign node['orgLevel']
          - mark node['hybrid']=True only for person nodes (not isGroup)
            when they are at or below start_level and have more than
-           max_horizontal_children *real person* children.
+           max_horizontal_children real person children (so 3+ children get vertical stack).
 
         We treat children with names starting with '(' (e.g. "(2) Managers")
         as aggregated placeholders and exclude them from the count.
@@ -431,7 +574,7 @@ def build_org_chart_data(df):
             else:
                 app.logger.debug("[HYBRID] no hybrids marked")
 
-    mark_vertical_branches(root_node, start_level=4, max_horizontal_children=3)
+    mark_vertical_branches(root_node, start_level=3, max_horizontal_children=2)
 
     # ---- Collapse logic ----
     default_expanded_group_id = "GROUP_LEADERS" if "GROUP_LEADERS" in group_ids else None
@@ -465,9 +608,10 @@ def index():
 
         try:
             df_clean = load_and_clean_org_data_from_file(file)
-            org_data = build_org_chart_data(df_clean)
+            dataset_name = file.filename or ""
+            org_data = build_org_chart_data(df_clean, dataset_name=dataset_name)
             org_data = _sanitize_org_node(org_data)
-            return render_template("org_chart.html", org_data=org_data)
+            return render_template("org_chart.html", org_data=org_data, dataset_name=dataset_name)
         except Exception as e:
             # return a helpful error for users; in prod you'd log it as well
             return f"Error processing file: {e}", 500
