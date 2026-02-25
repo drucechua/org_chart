@@ -687,6 +687,95 @@
       min-height: 0 !important;
     }
 
+    /* 11+ direct children: leaf children in compact block, branch children stay normal (data-prop-compact style) */
+    /* Outer wrapper: parent li is the visual container so all cards are encapsulated with consistent padding */
+    .orgchart li.hierarchy:has(> .node.group-node-compact-leaves) {
+      background: #f1f5f9 !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: var(--org-radius);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      padding: 16px !important;
+      margin: 12px 0 12px 20px !important;
+      width: fit-content !important;
+      min-width: min(432px, 95vw) !important;
+      max-width: min(1200px, 95vw) !important;
+      overflow: visible !important;
+      box-sizing: border-box !important;
+    }
+    .orgchart .node.group-node-compact-leaves.group-node {
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0;
+      padding: 0 0 10px 0 !important;
+      overflow: visible !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      height: auto !important;
+      min-height: 0 !important;
+      box-shadow: none !important;
+    }
+    .orgchart .node.group-node-compact-leaves + .nodes,
+    .orgchart .node.group-node-compact-leaves + .nodes.vertical,
+    .orgchart .nodes.compact-leaves-nodes {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-auto-rows: 72px !important;
+      gap: 12px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      max-width: min(1200px, calc(95vw - 48px));
+      width: 100% !important;
+      box-sizing: border-box !important;
+      align-content: start !important;
+      justify-items: stretch !important;
+      align-items: stretch !important;
+    }
+    .orgchart .node.group-node-compact-leaves + .nodes > li.hierarchy,
+    .orgchart .nodes.compact-leaves-nodes > li.hierarchy {
+      display: flex !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+    }
+    /* Equal-size employee cards inside compact container: fixed same width/height, no content-based sizing */
+    .orgchart .node.group-node-compact-leaves + .nodes .node,
+    .orgchart .nodes.compact-leaves-nodes .node,
+    body.view-staff .orgchart .nodes.compact-leaves-nodes .node,
+    body.view-staff .orgchart .node.group-node-compact-leaves + .nodes .node {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      height: 72px !important;
+      min-height: 72px !important;
+      max-height: 72px !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding: 8px 10px !important;
+      flex: 1 1 auto !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: stretch !important;
+    }
+    /* Truncate long name/title so card size never grows */
+    .orgchart .nodes.compact-leaves-nodes .node .org-node-name,
+    .orgchart .nodes.compact-leaves-nodes .node .org-node-title,
+    .orgchart .node.group-node-compact-leaves + .nodes .node .org-node-name,
+    .orgchart .node.group-node-compact-leaves + .nodes .node .org-node-title {
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      min-width: 0 !important;
+    }
+    .orgchart .node.group-node-compact-leaves .org-node-name,
+    .orgchart .node.group-node-compact-leaves .org-node-title {
+      font-size: 12px;
+      color: var(--org-text-muted);
+    }
+
     /* Third-Party Resources: container (grid) format for any node with 5+ children (compact: true) */
     body.view-staff .orgchart .node.compact {
       overflow: visible !important;
@@ -875,7 +964,20 @@
     /* View-specific layout and density */
     body.view-leadership .orgchart .level { padding-top: 12px; padding-bottom: 12px; }
     body.view-staff .orgchart .level { padding-top: 16px; padding-bottom: 16px; }
-    body.view-staff .orgchart .node:not(.group-node) .org-node-title { font-size: 12px; }
+    /* Third-Party: equal container size and font size for all employee cards */
+    body.view-staff .orgchart .node:not(.group-node):not(.node-aggregate) {
+      width: 220px !important;
+      min-width: 220px !important;
+      max-width: 220px !important;
+      min-height: 72px !important;
+      box-sizing: border-box;
+    }
+    body.view-staff .orgchart .node:not(.group-node) .org-node-name {
+      font-size: 13px !important;
+    }
+    body.view-staff .orgchart .node:not(.group-node) .org-node-title {
+      font-size: 12px !important;
+    }
     body.view-staff #btnShowOrgs { display: none; }
     /* Third-Party: allow horizontal spread so L2R tree and top-level branches use space */
     body.view-staff .orgchart .node.group-node-staff + .nodes {
@@ -1517,11 +1619,14 @@
           },
           initCompleted: function($chart) {
             applyVerticalStackToHybridNodes($chart);
+            ensureCompactLeavesLayout($chart);
             requestAnimationFrame(function() {
               applyVerticalStackToHybridNodes($container.find('.orgchart'));
+              ensureCompactLeavesLayout($container.find('.orgchart'));
             });
             setTimeout(function() {
               applyVerticalStackToHybridNodes($container.find('.orgchart'));
+              ensureCompactLeavesLayout($container.find('.orgchart'));
             }, 100);
             if (currentView !== 'staff' && !currentOrgFilter) {
               setTimeout(function() { applyInitialCollapseToLevel3($container.find('.orgchart')); }, 0);
@@ -1535,6 +1640,7 @@
           if (!$chart || !$chart.length) return;
           $chart.find('.node.vertical-stack').each(function() {
             var $node = $(this);
+            if ($node.hasClass('group-node-compact-leaves')) return;
             var $li = $node.closest('li.hierarchy');
             if (!$li.length) return;
             var $allChildUls = $li.children('ul');
@@ -1542,7 +1648,18 @@
             $allChildUls.addClass('vertical');
           });
         }
+        function ensureCompactLeavesLayout($chart) {
+          if (!$chart || !$chart.length) return;
+          $chart.find('.node.group-node-compact-leaves').each(function() {
+            var $node = $(this);
+            var $ul = getChildrenList($node.closest('li.hierarchy'));
+            if ($ul.length) {
+              $ul.removeClass('vertical').addClass('compact-leaves-nodes');
+            }
+          });
+        }
         applyVerticalStackToHybridNodes($container.find('.orgchart'));
+        ensureCompactLeavesLayout($container.find('.orgchart'));
 
         $(document).off('click.orgchartTooltip').on('click.orgchartTooltip', function(e) {
           if (!$(e.target).closest('#chart-container .orgchart .node').length) {

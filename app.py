@@ -485,7 +485,7 @@ def build_org_chart_data(df, dataset_name=""):
         }
         group_trainees = {
             "id": "GROUP_TRAINEES",
-            "name": "TRAINEES & EARLY CAREER",
+            "name": "",
             "title": "",
             "shortTitle": "TRAINEES & EARLY CAREER",
             "org": "",
@@ -535,13 +535,49 @@ def build_org_chart_data(df, dataset_name=""):
         if new_children:
             root_node["children"] = new_children
 
+    # ---- Compact container for 11+ direct children: only leaf children in container, branches stay normal ----
+    _MIN_DIRECT_CHILDREN_FOR_COMPACT_LEAVES = 11
+
+    def split_leaves_into_compact(node):
+        """If node has 11+ direct children, put leaf children (no sub-children, not directors) in a compact container; keep branch children and directors as normal siblings."""
+        children = node.get("children", []) or []
+        if len(children) < _MIN_DIRECT_CHILDREN_FOR_COMPACT_LEAVES:
+            for child in children:
+                split_leaves_into_compact(child)
+            return
+        # Leaves = no sub-children and not a director (directors stay outside as separate branches)
+        leaves = [c for c in children if not (c.get("children") or []) and not c.get("isLeader")]
+        branches = [c for c in children if c.get("children") or c.get("isLeader")]
+        if leaves:
+            parent_id = node.get("id", "node")
+            container = {
+                "id": "COMPACT_LEAVES_" + str(parent_id),
+                "name": "",
+                "title": "",
+                "shortTitle": "Direct reports",
+                "org": "",
+                "children": leaves,
+                "isLeader": False,
+                "isGroup": True,
+                "compact": True,
+                "className": "group-node-compact-leaves",
+            }
+            node["children"] = branches + [container]
+        for child in node["children"]:
+            if str(child.get("id", "")).startswith("COMPACT_LEAVES_"):
+                continue
+            split_leaves_into_compact(child)
+
+    split_leaves_into_compact(root_node)
+
     # ---- Mark vertical / hybrid branches from level 3 onward ----
-    def mark_vertical_branches(root, start_level=3, max_horizontal_children=2):
+    def mark_vertical_branches(root, start_level=3, max_horizontal_children=2, max_vertical_children=10):
         """
         BFS walk:
          - assign node['orgLevel']
          - mark node['hybrid']=True when at or below start_level and has more than
-           max_horizontal_children real person children (3+ get vertical stack).
+           max_horizontal_children but fewer than max_vertical_children real person children
+           (3–9 get vertical stack; 10+ go to compact block).
          - Applies to both person nodes and group nodes (e.g. org containers).
 
         We treat children with names starting with '(' (e.g. "(2) Managers")
@@ -564,11 +600,13 @@ def build_org_chart_data(df, dataset_name=""):
                 and not c.get("name", "").strip().startswith("(")
             ]
 
-            # Mark hybrid (vertical stack) when level >= start_level and has more than max_horizontal_children person children (no isGroup exclusion)
+            n = len(person_children)
+            # Mark hybrid (vertical stack) when level >= start_level and person children in (max_horizontal_children, max_vertical_children)
             if (level >= start_level
-                and len(person_children) > max_horizontal_children):
+                and n > max_horizontal_children
+                and n < max_vertical_children):
                 node["hybrid"] = True
-                hybrids.append((node.get("id"), node.get("name"), level, len(person_children)))
+                hybrids.append((node.get("id"), node.get("name"), level, n))
 
             # Enqueue all children to continue BFS — still assign orgLevel down the tree
             for child in children:
