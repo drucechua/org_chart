@@ -262,6 +262,14 @@
     .orgchart .nodes {
       align-items: flex-start;
     }
+    .orgchart .nodes.hidden {
+      display: none !important;
+    }
+    /* Collapsed state: hide direct child list (works even if plugin uses ul without .nodes for group nodes) */
+    .orgchart .hierarchy.isChildrenCollapsed > ul.nodes,
+    .orgchart .hierarchy.isChildrenCollapsed > ul {
+      display: none !important;
+    }
 
     /* Third-Party Resources: use horizontal spread so hierarchy is visible (overridden in view-staff for L2R layout) */
     .orgchart .node.group-node-staff + .nodes {
@@ -310,7 +318,7 @@
       margin-bottom: 8px;
     }
 
-    /* Node base – consistent card style */
+    /* Node base – consistent card style; center and middle align name and title */
     .orgchart .node {
       position: relative;
       z-index: 1;
@@ -322,6 +330,11 @@
       padding: 10px 12px;
       box-sizing: border-box;
       transition: box-shadow 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
     }
 
     .orgchart .node:hover {
@@ -333,10 +346,6 @@
       min-width: 220px;
       min-height: 72px;
       /* allow cards to grow vertically so titles can wrap */
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      text-align: center;
     }
 
     .org-node-name {
@@ -348,6 +357,8 @@
       font-size: 13px;
       margin-bottom: 4px;
       color: var(--org-text);
+      text-align: center;
+      width: 100%;
     }
 
     .org-node-title {
@@ -357,6 +368,8 @@
       text-overflow: clip;
       font-size: 12px;
       color: var(--org-text-muted);
+      text-align: center;
+      width: 100%;
     }
 
     /* Hide plugin’s side expand/collapse controls – we use one centered icon only */
@@ -474,6 +487,18 @@
       background: #fef9c3;
       border-color: #eab308;
       box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.25);
+    }
+
+    /* Search match: yellow highlight for any employee card (overrides group-node, team-leader, etc.) */
+    .orgchart .node.search-highlight {
+      background: #fef9c3 !important;
+      border-color: #eab308 !important;
+      box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.35) !important;
+    }
+    .orgchart .node.search-highlight .org-node-name,
+    .orgchart .node.search-highlight .org-node-title,
+    .orgchart .node.search-highlight .org-node-full-title {
+      color: #854d0e !important;
     }
 
     /* Group headers – dark, high-contrast (top-level only; org containers use .group-node-org) */
@@ -851,6 +876,7 @@
     body.view-leadership .orgchart .level { padding-top: 12px; padding-bottom: 12px; }
     body.view-staff .orgchart .level { padding-top: 16px; padding-bottom: 16px; }
     body.view-staff .orgchart .node:not(.group-node) .org-node-title { font-size: 12px; }
+    body.view-staff #btnShowOrgs { display: none; }
     /* Third-Party: allow horizontal spread so L2R tree and top-level branches use space */
     body.view-staff .orgchart .node.group-node-staff + .nodes {
       display: flex !important;
@@ -1315,6 +1341,42 @@
         return root;
       }
 
+      function getChildrenList($h) {
+        var $childrenList = $h.children('.nodes');
+        if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
+        if (!$childrenList.length) $childrenList = $h.find('>.node').next('ul');
+        if (!$childrenList.length) $childrenList = $h.children('ul').first();
+        if (!$childrenList.length) $childrenList = $h.find('.node').first().nextAll('ul').first();
+        return $childrenList;
+      }
+      function applyInitialCollapseToLevel3($chart) {
+        if (!$chart || !$chart.length) return;
+        var maxInitialLevel = 3;
+        function setDepth($list, depth) {
+          if (!$list || !$list.length) return;
+          $list.children('li.hierarchy').each(function() {
+            var $h = $(this);
+            $h.data('oc-depth', depth);
+            var $childrenList = getChildrenList($h);
+            if ($childrenList.length) setDepth($childrenList, depth + 1);
+          });
+        }
+        var $rootList = $chart.children('ul').first();
+        if (!$rootList.length) $rootList = $chart.find('ul.nodes').first();
+        setDepth($rootList, 1);
+        $chart.find('.hierarchy').each(function() {
+          var $h = $(this);
+          var depth = $h.data('oc-depth');
+          if (depth >= maxInitialLevel) {
+            var $childrenList = getChildrenList($h);
+            if ($childrenList.length) {
+              $h.addClass('isChildrenCollapsed');
+              $childrenList.addClass('hidden');
+            }
+          }
+        });
+      }
+
       function buildChart(data) {
         $container.empty();
         var isStaffView = (currentView === 'staff');
@@ -1366,8 +1428,8 @@
               if (isOrgContainer) {
                 $node.addClass('group-node-org');
                 var leaderName = data.leaderName || '';
-                var leaderTitle = data.leaderTitle || '';
-                var leaderFullTitle = (data.leaderFullTitle || '').trim();
+                var leaderTitle = (data.leaderTitle || data.shortTitle || data.title || '').trim();
+                var leaderFullTitle = (data.leaderFullTitle || data.title || '').trim();
                 $node.find('.org-node-name').text(leaderName);
                 var $titleEl = $node.find('.org-node-title');
                 if (leaderTitle) {
@@ -1395,6 +1457,9 @@
             if (data.children && data.children.length) {
               $node.addClass('node-has-children');
               $node.append('<span class="node-expand-icon" aria-hidden="true"></span>');
+            }
+            if (data.orgLevel != null) {
+              $node.attr('data-org-level', data.orgLevel);
             }
             var tooltipParts = [];
             if (data.name) tooltipParts.push(data.name);
@@ -1444,9 +1509,8 @@
                 var $h = $clicked.closest('li.hierarchy');
                 if ($h.length) {
                   $h.toggleClass('isChildrenCollapsed');
-                  var $childrenList = $h.children('.nodes');
-                  if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
-                  $childrenList.toggleClass('hidden');
+                  var $childrenList = getChildrenList($h);
+                  if ($childrenList.length) $childrenList.toggleClass('hidden');
                 }
               }
             });
@@ -1459,6 +1523,9 @@
             setTimeout(function() {
               applyVerticalStackToHybridNodes($container.find('.orgchart'));
             }, 100);
+            if (currentView !== 'staff' && !currentOrgFilter) {
+              setTimeout(function() { applyInitialCollapseToLevel3($container.find('.orgchart')); }, 0);
+            }
           }
         });
 
@@ -1496,33 +1563,10 @@
             expandAll();
           }
           if (!isOrgFilterView) {
-            var maxInitialLevel = (currentView === 'staff') ? 8 : 3;
-            function setDepth($list, level) {
-              if (!$list || !$list.length) return;
-              $list.children('li.hierarchy').each(function() {
-                var $h = $(this);
-                $h.data('oc-depth', level);
-                var $childrenList = $h.children('.nodes');
-                if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
-                if ($childrenList.length) setDepth($childrenList, level + 1);
-              });
-            }
-            var $rootList = $chart.children('ul').first();
-            if (!$rootList.length) $rootList = $chart.find('ul.nodes').first();
-            setDepth($rootList, 1);
             if (currentView === 'staff') {
               expandAll();
             } else {
-              $container.find('.orgchart .hierarchy').each(function() {
-                var $h = $(this);
-                var depth = $h.data('oc-depth');
-                if (depth > maxInitialLevel) {
-                  $h.addClass('isChildrenCollapsed');
-                  var $childrenList = $h.children('.nodes');
-                  if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
-                  $childrenList.addClass('hidden');
-                }
-              });
+              applyInitialCollapseToLevel3($chart);
             }
           }
           if ($wrapper.length) {
@@ -1538,6 +1582,7 @@
                 baseChartWidth = $chart.outerWidth();
                 baseChartHeight = $chart.outerHeight();
                 fitChartToView();
+                if (!isOrgFilterView && currentView !== 'staff') applyInitialCollapseToLevel3($chart);
               }
             }, 150);
           }
@@ -1551,7 +1596,7 @@
           $container.find('.orgchart .hierarchy').each(function() {
             initialCollapsedState.push($(this).hasClass('isChildrenCollapsed'));
           });
-        }, 220);
+        }, 400);
       }
 
       function expandAll() {
@@ -1562,8 +1607,7 @@
       function compressChart() {
         $container.find('.orgchart .hierarchy').each(function(i) {
           var $h = $(this);
-          var $childrenList = $h.children('.nodes');
-          if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
+          var $childrenList = getChildrenList($h);
           if (i < initialCollapsedState.length && initialCollapsedState[i]) {
             $h.addClass('isChildrenCollapsed');
             $childrenList.addClass('hidden');
@@ -1578,6 +1622,10 @@
         currentView = view;
         currentOrgFilter = null;
         $('body').removeClass('view-leadership view-staff view-trainees').addClass('view-' + view);
+        if (view === 'staff') {
+          $('#orgListPanel').attr('aria-hidden', 'true').attr('hidden', '');
+          $('#btnShowOrgs').attr('aria-expanded', 'false').text('Show by Organization');
+        }
         $('#orgTabs .org-tab').removeClass('active').attr('aria-pressed', 'false');
         $('#orgTabs .org-tab[data-view="' + view + '"]').addClass('active').attr('aria-pressed', 'true');
         buildChart(getChartData());
@@ -1692,9 +1740,8 @@
         var $h = $node.closest('li.hierarchy');
         while ($h.length) {
           $h.removeClass('isChildrenCollapsed');
-          var $childrenList = $h.children('.nodes');
-          if (!$childrenList.length) $childrenList = $h.find('>.node').next('.nodes');
-          $childrenList.removeClass('hidden');
+          var $childrenList = getChildrenList($h);
+          if ($childrenList.length) $childrenList.removeClass('hidden');
           var $list = $h.parent();
           if (!$list.length || !$list.hasClass('nodes')) break;
           var $parentHierarchy = $list.parent();
@@ -1707,17 +1754,19 @@
 
       $search.on('input', function() {
         var q = $(this).val().trim().toLowerCase();
-        var $nodes = $container.find('.node');
-        $nodes.removeClass('focused');
+        var $nodes = $container.find('.orgchart .node');
+        $nodes.removeClass('focused search-highlight');
         if (!q) return;
-        var $match = $nodes.filter(function() {
+        var $matches = $nodes.filter(function() {
           var name = $(this).find('.org-node-name').text().trim().toLowerCase();
           return name.indexOf(q) !== -1;
-        }).first();
-        if ($match.length) {
-          expandPathToNode($match);
-          $match.addClass('focused');
-          centerOnNode($match);
+        });
+        $matches.addClass('search-highlight');
+        var $first = $matches.first();
+        if ($first.length) {
+          expandPathToNode($first);
+          $first.addClass('focused');
+          centerOnNode($first);
         }
       });
 

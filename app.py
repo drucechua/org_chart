@@ -282,15 +282,17 @@ def build_org_chart_data(df, dataset_name=""):
             if is_leader_value(child.get("org")):
                 org_name = (child.get("org") or "").strip()
                 if org_name:
+                    director_title = (child.get("title") or "").strip()
+                    director_short = (child.get("shortTitle") or child.get("title") or "").strip()
                     container = {
                         "id": "ORG_" + str(child.get("id", "")),
                         "name": org_name,
-                        "title": "",
-                        "shortTitle": org_name,
+                        "title": director_title,
+                        "shortTitle": director_short or org_name,
                         "org": "",
-                        "leaderName": child.get("name", ""),
-                        "leaderTitle": (child.get("shortTitle") or child.get("title") or "").strip(),
-                        "leaderFullTitle": (child.get("title") or "").strip(),
+                        "leaderName": (child.get("name") or "").strip(),
+                        "leaderTitle": director_short or director_title,
+                        "leaderFullTitle": director_title,
                         "children": child.get("children", []) or [],
                         "isLeader": True,
                         "isGroup": True,
@@ -341,6 +343,11 @@ def build_org_chart_data(df, dataset_name=""):
         n["hasContractorDescendant"] = n["isContractor"] or any(
             c.get("isContractor") or c.get("hasContractorDescendant") for c in children
         )
+        # Org containers: director is in leaderName, not a node—if leader is [C], treat as contractor path
+        if n.get("isGroup") and str(n.get("id", "")).startswith("ORG_"):
+            leader_name = (n.get("leaderName") or "") if isinstance(n.get("leaderName"), str) else ""
+            if "[C]" in leader_name:
+                n["hasContractorDescendant"] = True
 
     def deep_copy_node(node):
         """Deep copy a node and its children (for pruning/filtering)."""
@@ -516,38 +523,8 @@ def build_org_chart_data(df, dataset_name=""):
                 if pruned is not None:
                     group_leaders["children"].append(pruned)
 
-        # Third-Party Resources: wrap children in a separate container (compact grid) when > 4; parent stays a normal card
-        _MIN_CHILDREN_FOR_COMPACT = 4
-
-        def wrap_staff_children_in_container(node, min_children=_MIN_CHILDREN_FOR_COMPACT):
-            """If node has more than min_children person children, replace children with one group node that holds them (compact grid). Parent is not compact."""
-            children = node.get("children", []) or []
-            for child in children:
-                wrap_staff_children_in_container(child, min_children=min_children)
-            person_children = [
-                c for c in children
-                if not c.get("isGroup")
-                and isinstance(c.get("name", ""), str)
-                and not (c.get("name", "") or "").strip().startswith("(")
-            ]
-            if len(person_children) > min_children:
-                parent_id = node.get("id", "node")
-                container = {
-                    "id": f"STAFF_GRID_{parent_id}",
-                    "name": "Direct reports",
-                    "title": "",
-                    "shortTitle": "Direct reports",
-                    "org": "",
-                    "children": list(children),
-                    "isLeader": False,
-                    "isGroup": True,
-                    "compact": True,
-                    "className": "group-node-staff-grid",
-                }
-                node["children"] = [container]
-
-        if group_staff["children"]:
-            wrap_staff_children_in_container(group_staff, min_children=_MIN_CHILDREN_FOR_COMPACT)
+        # Third-Party Resources: keep direct-report hierarchy so each [C]'s parent card is their
+        # actual manager from the dataset (no STAFF_GRID wrapper that would insert an extra level).
 
         new_children = []
         for g in (group_leaders, group_staff, group_trainees):
@@ -563,9 +540,9 @@ def build_org_chart_data(df, dataset_name=""):
         """
         BFS walk:
          - assign node['orgLevel']
-         - mark node['hybrid']=True only for person nodes (not isGroup)
-           when they are at or below start_level and have more than
-           max_horizontal_children real person children (so 3+ children get vertical stack).
+         - mark node['hybrid']=True when at or below start_level and has more than
+           max_horizontal_children real person children (3+ get vertical stack).
+         - Applies to both person nodes and group nodes (e.g. org containers).
 
         We treat children with names starting with '(' (e.g. "(2) Managers")
         as aggregated placeholders and exclude them from the count.
@@ -587,9 +564,8 @@ def build_org_chart_data(df, dataset_name=""):
                 and not c.get("name", "").strip().startswith("(")
             ]
 
-            # Mark hybrid only if this node is a person (not isGroup) AND it exceeds threshold
+            # Mark hybrid (vertical stack) when level >= start_level and has more than max_horizontal_children person children (no isGroup exclusion)
             if (level >= start_level
-                and not node.get("isGroup")
                 and len(person_children) > max_horizontal_children):
                 node["hybrid"] = True
                 hybrids.append((node.get("id"), node.get("name"), level, len(person_children)))
