@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>Org Chart</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -66,6 +67,41 @@
       z-index: 10;
       box-shadow: var(--org-shadow);
       max-width: calc(50% - 120px);
+    }
+
+    .brand-logo {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      z-index: 12;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      pointer-events: none;
+    }
+
+    .brand-logo img {
+      display: block;
+      max-height: 40px;
+      height: auto;
+      width: auto;
+      object-fit: contain;
+    }
+
+    @media (max-width: 768px) {
+      .brand-logo img {
+        max-height: 32px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .brand-logo {
+        top: 10px;
+        right: 14px;
+      }
+      .brand-logo img {
+        max-height: 26px;
+      }
     }
 
     .right-toolbar {
@@ -720,7 +756,6 @@
     .orgchart .nodes.compact-leaves-nodes {
       display: grid !important;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      grid-auto-rows: 72px !important;
       gap: 12px !important;
       margin: 0 !important;
       padding: 0 !important;
@@ -739,7 +774,7 @@
       min-width: 0 !important;
       min-height: 0 !important;
     }
-    /* Equal-size employee cards inside compact container: fixed same width/height, no content-based sizing */
+    /* Equal-size employee cards inside compact container: sizing set via JS based on max card width/height */
     .orgchart .node.group-node-compact-leaves + .nodes .node,
     .orgchart .nodes.compact-leaves-nodes .node,
     body.view-staff .orgchart .nodes.compact-leaves-nodes .node,
@@ -747,9 +782,6 @@
       width: 100% !important;
       min-width: 0 !important;
       max-width: none !important;
-      height: 72px !important;
-      min-height: 72px !important;
-      max-height: 72px !important;
       box-sizing: border-box !important;
       margin: 0 !important;
       padding: 8px 10px !important;
@@ -1129,6 +1161,9 @@
 </head>
 <body>
   <div class="hint-bar">Tip: Click a group or leader to expand their team.</div>
+  <div class="brand-logo" aria-hidden="true">
+    <img src="{{ url_for('static', filename='chart_logo.png') }}" alt="Org chart logo">
+  </div>
   <nav class="org-tabs" id="orgTabs" aria-label="Chart view">
     <button type="button" class="org-tab active" data-view="leadership" aria-pressed="true">NYUAD Employees</button>
     <button type="button" class="org-tab" data-view="staff" aria-pressed="false">{{ 'Student and Lab Assistants' if 'Human Resources' in (dataset_name | default('')) else 'Third-Party Resources' }}</button>
@@ -1650,11 +1685,48 @@
         }
         function ensureCompactLeavesLayout($chart) {
           if (!$chart || !$chart.length) return;
+
+          function normalizeCompactLeafCardSizes($ul) {
+            if (!$ul || !$ul.length) return;
+            var $nodes = $ul.children('li.hierarchy').children('.node');
+            if (!$nodes.length) return;
+            // Reset any previous explicit sizing before measuring
+            $nodes.css({
+              width: '',
+              minWidth: '',
+              maxWidth: '',
+              height: '',
+              minHeight: '',
+              maxHeight: ''
+            });
+            var maxW = 0;
+            var maxH = 0;
+            $nodes.each(function() {
+              var $n = $(this);
+              var w = $n.outerWidth();
+              var h = $n.outerHeight();
+              if (w > maxW) maxW = w;
+              if (h > maxH) maxH = h;
+            });
+            if (!maxW || !maxH) return;
+            $nodes.each(function() {
+              $(this).css({
+                width: maxW + 'px',
+                minWidth: maxW + 'px',
+                maxWidth: maxW + 'px',
+                height: maxH + 'px',
+                minHeight: maxH + 'px',
+                maxHeight: maxH + 'px'
+              });
+            });
+          }
+
           $chart.find('.node.group-node-compact-leaves').each(function() {
             var $node = $(this);
             var $ul = getChildrenList($node.closest('li.hierarchy'));
             if ($ul.length) {
               $ul.removeClass('vertical').addClass('compact-leaves-nodes');
+              normalizeCompactLeafCardSizes($ul);
             }
           });
         }

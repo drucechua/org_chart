@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>Organization Chart Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 
   <!-- Outfit font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,10 +34,14 @@
       margin: 0;
       min-height: 100vh;
       font-family: 'Outfit', system-ui, sans-serif;
-      background:
+      background-color: var(--bg);
+      background-image:
+        url("{{ url_for('static', filename='arabesque-DIGITAL-light-violet.png') }}"),
         radial-gradient(circle at 10% 0%, rgba(87, 6, 140, 0.08) 0, transparent 45%),
-        radial-gradient(circle at 90% 100%, rgba(239, 139, 33, 0.08) 0, transparent 50%),
-        var(--bg);
+        radial-gradient(circle at 90% 100%, rgba(239, 139, 33, 0.08) 0, transparent 50%);
+      background-repeat: no-repeat, no-repeat, no-repeat;
+      background-position: center center, 10% 0%, 90% 100%;
+      background-size: cover, auto, auto;
       display: flex;
       align-items: center;
       justify-content: center;
