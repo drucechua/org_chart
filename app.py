@@ -621,7 +621,7 @@ def build_org_chart_data(df, dataset_name=""):
             else:
                 app.logger.debug("[HYBRID] no hybrids marked")
 
-    mark_vertical_branches(root_node, start_level=3, max_horizontal_children=2)
+    mark_vertical_branches(root_node, start_level=3, max_horizontal_children=3)
 
     # ---- Collapse logic ----
     default_expanded_group_id = "GROUP_LEADERS" if "GROUP_LEADERS" in group_ids else None
